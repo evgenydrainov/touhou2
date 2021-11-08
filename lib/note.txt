@@ -1,0 +1,1 @@
+visual studio ignores folders called "Debug", "Release", "x64", "x86"
