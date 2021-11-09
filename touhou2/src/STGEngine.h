@@ -1,6 +1,4 @@
 #pragma once
-#include "Singleton.h"
-
 #include "Player.h"
 #include "Boss.h"
 #include "Bullet.h"
@@ -10,7 +8,7 @@
 #include <SFML/Graphics.hpp>
 #include <memory>
 
-class STGEngine : public Singleton<STGEngine>
+class STGEngine
 {
 public:
 	constexpr static int playAreaW = 384;
@@ -22,13 +20,14 @@ public:
 	{
 		Null,
 		Normal,
+		Paused,
 		GameOver
 	};
 
-	void loadAssets();
-	void initialize();
+	STGEngine();
+
 	void update(float delta);
-	void draw(sf::RenderTexture& target, float delta) const;
+	void draw(sf::RenderTarget& target, float delta) const;
 
 	sf::Texture projectiles;
 	sf::Texture background;
@@ -63,7 +62,7 @@ private:
 
 	void m_drawBg(sf::RenderTarget& target, float delta) const;
 	void m_drawPlayArea(sf::RenderTarget& target, float delta) const;
-	void m_drawHud(sf::RenderTexture& target, float delta) const;
+	void m_drawHud(sf::RenderTarget& target, float delta) const;
 
 	State m_state{};
 

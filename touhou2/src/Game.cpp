@@ -1,19 +1,21 @@
 #include "Game.h"
 
 #include "Input.h"
-#include "STGEngine.h"
 
-#include "drawing.h"
 #include "Text.h"
-
+#include "key_pressed.h"
 #include <fmt/format.h>
-
 #include "Log.h"
 
 void Game::run()
 {
-	m_loadAssets();
-	m_initialize();
+	m_window.create(sf::VideoMode(gameW, gameH), "Touhou");
+	m_window.setVerticalSyncEnabled(true);
+	m_gameSurf.create(gameW, gameH);
+	simsun.loadFromFile("Fonts/simsunb.ttf");
+
+	state = State::Gameplay;
+	engine = std::make_unique<STGEngine>();
 
 	sf::Clock c;
 	while (m_window.isOpen())
@@ -35,26 +37,6 @@ void Game::run()
 	}
 }
 
-void Game::m_loadAssets()
-{
-	m_window.create(sf::VideoMode(gameW, gameH), "Touhou");
-	m_window.setVerticalSyncEnabled(true);
-
-	m_gameSurf.create(gameW, gameH);
-
-	simsun.loadFromFile("Fonts/simsunb.ttf");
-
-	auto& engine = STGEngine::getInstance();
-	engine.loadAssets();
-}
-
-void Game::m_initialize()
-{
-	state = State::Gameplay;
-	auto& engine = STGEngine::getInstance();
-	engine.initialize();
-}
-
 void Game::m_handleEvents()
 {
 	sf::Event e;
@@ -74,25 +56,29 @@ void Game::m_handleEvents()
 void Game::m_tick(float delta)
 {
 	auto& input = Input::getInstance();
-	auto& engine = STGEngine::getInstance();
 
 	input.update();
 
-	switch (state)
+	// debug
+	if (key_pressed<sf::Keyboard::F2>())
 	{
-	case State::Gameplay:
-		engine.update(delta);
-		break;
+		// restart
+		state = State::Gameplay;
+		engine = nullptr;
+		engine = std::make_unique<STGEngine>();
 	}
+
+	//if (key_pressed<sf::Keyboard::F4>())
+	//{
+	//	m_window.create(sf::VideoMode::getFullscreenModes()[0], "Touhou", sf::Style::None);
+	//	m_window.setVerticalSyncEnabled(true);
+	//}
+
+	m_update(delta);
 
 	m_gameSurf.clear();
 
-	switch (state)
-	{
-	case State::Gameplay:
-		engine.draw(m_gameSurf, delta);
-		break;
-	}
+	m_draw(m_gameSurf, delta);
 
 	m_displayFpsCount += 60.0f / delta;
 	m_displayFpsCountN += 1.0f;
@@ -107,19 +93,63 @@ void Game::m_tick(float delta)
 	}
 
 	Text t;
-	t.setPosition(gameW, gameH);
+	t.setPosition(sf::Vector2f(m_gameSurf.getSize()));
 	t.setString(fmt::format(
 		"{:.2f}fps",
 		m_displayFps));
 	t.align(Text::HAlign::Right, Text::VAlign::Bottom);
 	m_gameSurf.draw(t);
 
+	static bool show_msg = false;
+	show_msg ^= key_pressed<sf::Keyboard::F1>();
+	if (show_msg)
+	{
+		Text t;
+		t.setPosition(0.0f, m_gameSurf.getSize().y);
+		t.setString("f1 - show this message\n"
+			"f2 - restart");
+		t.align(Text::HAlign::Left, Text::VAlign::Bottom);
+		m_gameSurf.draw(t);
+	}
+
 	m_gameSurf.display();
 }
 
-void Game::m_render()
+void Game::m_render() const
 {
 	m_window.clear();
-	m_window.draw(sf::Sprite(m_gameSurf.getTexture()));
+
+	sf::Vector2f windowSize(m_window.getSize());
+	sf::Vector2f gameSize(m_gameSurf.getSize());
+	float scale = std::min(windowSize.x / gameSize.x, windowSize.y / gameSize.y);
+
+	sf::Sprite gameSurf(m_gameSurf.getTexture());
+	gameSurf.setScale(scale, scale);
+	gameSurf.setOrigin(gameSize * 0.5f);
+	gameSurf.setPosition(windowSize * 0.5f);
+
+	m_window.setView({ windowSize * 0.5f, windowSize });
+	m_window.draw(gameSurf);
+
 	m_window.display();
+}
+
+void Game::m_update(float delta)
+{
+	switch (state)
+	{
+	case State::Gameplay:
+		engine->update(delta);
+		break;
+	}
+}
+
+void Game::m_draw(sf::RenderTarget& target, float delta) const
+{
+	switch (state)
+	{
+	case State::Gameplay:
+		engine->draw(target, delta);
+		break;
+	}
 }

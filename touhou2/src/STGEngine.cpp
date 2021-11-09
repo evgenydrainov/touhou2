@@ -1,13 +1,13 @@
 #include "STGEngine.h"
 
+#include "Input.h"
+#include "Game.h"
+
 #include "mymath.h"
 #include "drawing.h"
 #include "Text.h"
 #include <fmt/format.h>
-
 #include "Log.h"
-
-#include "Input.h"
 
 // TODO: get rid of this
 int cursor = 0;
@@ -17,17 +17,13 @@ const char* menu[] =
 	"Exit"
 };
 
-void STGEngine::loadAssets()
+STGEngine::STGEngine()
 {
 	projectiles.loadFromFile("Sprites/Projectiles.png");
 	background.loadFromFile("Sprites/Background.png");
 	hud.loadFromFile("Sprites/Hud.png");
-
 	m_playArea.create(playAreaW, playAreaH);
-}
 
-void STGEngine::initialize()
-{
 	m_state = State::Normal;
 	m_script.load("Scripts/stage1.lua");
 }
@@ -51,12 +47,10 @@ void STGEngine::update(float delta)
 		if (input.checkPressed(Input::Confirm))
 			if (cursor == 0)
 			{
-				// TODO: deal with this somehow
-				player = Player();
-				boss = nullptr;
-				bullets.clear();
-				playerBullets.clear();
-				initialize();
+				auto& game = Game::getInstance();
+				game.engine = nullptr;
+				game.engine = std::make_unique<STGEngine>();
+				return;
 			}
 			else if (cursor == 1)
 			{
@@ -68,7 +62,7 @@ void STGEngine::update(float delta)
 	//Log("Update: ", c.restart().asSeconds() * 60.0f);
 }
 
-void STGEngine::draw(sf::RenderTexture& target, float delta) const
+void STGEngine::draw(sf::RenderTarget& target, float delta) const
 {
 	sf::Clock c;
 	
@@ -249,7 +243,7 @@ void STGEngine::m_drawPlayArea(sf::RenderTarget& target, float delta) const
 	target.draw(s);
 }
 
-void STGEngine::m_drawHud(sf::RenderTexture& target, float delta) const
+void STGEngine::m_drawHud(sf::RenderTarget& target, float delta) const
 {
 	sf::Transform t;
 	t.translate(playAreaX, playAreaY);

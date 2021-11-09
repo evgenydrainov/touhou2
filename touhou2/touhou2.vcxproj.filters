@@ -3,16 +3,16 @@
   <ItemGroup>
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\Boss.cpp">
-      <Filter>game\objects</Filter>
+      <Filter>touhou\stgengine\objects</Filter>
     </ClCompile>
     <ClCompile Include="src\Bullet.cpp">
-      <Filter>game\objects</Filter>
+      <Filter>touhou\stgengine\objects</Filter>
     </ClCompile>
     <ClCompile Include="src\GameObject.cpp">
-      <Filter>game\objects</Filter>
+      <Filter>touhou\stgengine\objects</Filter>
     </ClCompile>
     <ClCompile Include="src\Player.cpp">
-      <Filter>game\objects</Filter>
+      <Filter>touhou\stgengine\objects</Filter>
     </ClCompile>
     <ClCompile Include="src\fmt\format.cc">
       <Filter>lib\fmt</Filter>
@@ -20,34 +20,31 @@
     <ClCompile Include="src\Text.cpp">
       <Filter>stuff</Filter>
     </ClCompile>
-    <ClCompile Include="src\drawing.cpp">
-      <Filter>stuff</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Game.cpp">
-      <Filter>game\global</Filter>
-    </ClCompile>
     <ClCompile Include="src\Input.cpp">
-      <Filter>game\global</Filter>
+      <Filter>touhou\global</Filter>
     </ClCompile>
     <ClCompile Include="src\STGEngine.cpp">
-      <Filter>game\global</Filter>
+      <Filter>touhou\stgengine</Filter>
     </ClCompile>
     <ClCompile Include="src\Script.cpp">
-      <Filter>game</Filter>
+      <Filter>touhou\stgengine</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Game.cpp">
+      <Filter>touhou\global</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Boss.h">
-      <Filter>game\objects</Filter>
+      <Filter>touhou\stgengine\objects</Filter>
     </ClInclude>
     <ClInclude Include="src\Bullet.h">
-      <Filter>game\objects</Filter>
+      <Filter>touhou\stgengine\objects</Filter>
     </ClInclude>
     <ClInclude Include="src\GameObject.h">
-      <Filter>game\objects</Filter>
+      <Filter>touhou\stgengine\objects</Filter>
     </ClInclude>
     <ClInclude Include="src\Player.h">
-      <Filter>game\objects</Filter>
+      <Filter>touhou\stgengine\objects</Filter>
     </ClInclude>
     <ClInclude Include="src\Text.h">
       <Filter>stuff</Filter>
@@ -58,17 +55,11 @@
     <ClInclude Include="src\drawing.h">
       <Filter>stuff</Filter>
     </ClInclude>
-    <ClInclude Include="src\Game.h">
-      <Filter>game\global</Filter>
-    </ClInclude>
     <ClInclude Include="src\Input.h">
-      <Filter>game\global</Filter>
-    </ClInclude>
-    <ClInclude Include="src\STGEngine.h">
-      <Filter>game\global</Filter>
+      <Filter>touhou\global</Filter>
     </ClInclude>
     <ClInclude Include="src\Singleton.h">
-      <Filter>game\global</Filter>
+      <Filter>touhou\global</Filter>
     </ClInclude>
     <ClInclude Include="src\sine_table.h">
       <Filter>stuff</Filter>
@@ -79,8 +70,17 @@
     <ClInclude Include="src\Log.h">
       <Filter>stuff</Filter>
     </ClInclude>
+    <ClInclude Include="src\STGEngine.h">
+      <Filter>touhou\stgengine</Filter>
+    </ClInclude>
     <ClInclude Include="src\Script.h">
-      <Filter>game</Filter>
+      <Filter>touhou\stgengine</Filter>
+    </ClInclude>
+    <ClInclude Include="src\key_pressed.h">
+      <Filter>stuff</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Game.h">
+      <Filter>touhou\global</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -93,13 +93,16 @@
     <Filter Include="stuff">
       <UniqueIdentifier>{da30425d-d281-4b67-b126-4460f54e6749}</UniqueIdentifier>
     </Filter>
-    <Filter Include="game">
+    <Filter Include="touhou">
       <UniqueIdentifier>{a6c8cb73-93ac-4721-a45e-d186c4c7920a}</UniqueIdentifier>
     </Filter>
-    <Filter Include="game\global">
+    <Filter Include="touhou\global">
       <UniqueIdentifier>{9df12d45-d5a5-4613-9a65-090fa23d75e2}</UniqueIdentifier>
     </Filter>
-    <Filter Include="game\objects">
+    <Filter Include="touhou\stgengine">
+      <UniqueIdentifier>{406d6d8e-b14a-4370-8d89-ab2de3021d10}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="touhou\stgengine\objects">
       <UniqueIdentifier>{b18dffc4-3dce-4bf2-bcaa-34dd26f78c4c}</UniqueIdentifier>
     </Filter>
   </ItemGroup>

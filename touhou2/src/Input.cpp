@@ -1,4 +1,5 @@
 #include "Input.h"
+
 #include <SFML/Graphics.hpp>
 
 void Input::update()

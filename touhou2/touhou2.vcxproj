@@ -163,7 +163,6 @@
   <ItemGroup>
     <ClCompile Include="src\GameObject.cpp" />
     <ClCompile Include="src\Boss.cpp" />
-    <ClCompile Include="src\drawing.cpp" />
     <ClCompile Include="src\fmt\format.cc" />
     <ClCompile Include="src\Game.cpp" />
     <ClCompile Include="src\Script.cpp" />
@@ -175,6 +174,7 @@
     <ClCompile Include="src\Text.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\key_pressed.h" />
     <ClInclude Include="src\GameObject.h" />
     <ClInclude Include="src\Boss.h" />
     <ClInclude Include="src\collisions.h" />

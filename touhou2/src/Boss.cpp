@@ -1,10 +1,9 @@
 #include "Boss.h"
 
-#include "STGEngine.h"
+#include "Game.h"
 
 #include "mymath.h"
 #include "collisions.h"
-
 #include "Log.h"
 
 using namespace luabridge;
@@ -43,12 +42,12 @@ void Boss::update(float delta)
 
 void Boss::checkCollisions()
 {
-	auto& engine = STGEngine::getInstance();
-	for (auto pb = engine.playerBullets.begin(); pb != engine.playerBullets.end(); )
+	auto& game = Game::getInstance();
+	for (auto pb = game.engine->playerBullets.begin(); pb != game.engine->playerBullets.end(); )
 		if (col::circle_vs_circle(m_x, m_y, m_radius, pb->getX(), pb->getY(), pb->getRadius()))
 		{
 			m_getDamage(10.0f);
-			pb = engine.playerBullets.erase(pb);
+			pb = game.engine->playerBullets.erase(pb);
 		}
 		else
 		{

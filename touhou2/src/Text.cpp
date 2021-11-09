@@ -1,8 +1,10 @@
 #include "Text.h"
+
 #include "Game.h"
 
 Text::Text()
 {
+	// defaults
 	auto& game = Game::getInstance();
 	setFont(game.simsun);
 	setCharacterSize(16);

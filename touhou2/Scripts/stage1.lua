@@ -3,7 +3,7 @@ PHASE_SPELLCARD 		= 2
 
 function Wait(t)
 	while t > 0 do
-		t = t - Delta
+		t = t - 1
 		coroutine.yield()
 	end
 end
@@ -75,8 +75,8 @@ local Youmu = {
 		YoumuNonspell2, YoumuSpellcardB
 	},
 	Healthbars = {
-		{ 0, 1 },
-		{ 2, 3 }
+	[0]={ [0]= 0, 1 },
+		{ [0]= 2, 3 }
 	}
 }
 

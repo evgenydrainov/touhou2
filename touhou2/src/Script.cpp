@@ -1,23 +1,22 @@
 #include "Script.h"
 
-#include "STGEngine.h"
+#include "Game.h"
 
 #include "mymath.h"
-
 #include "Log.h"
 
 using namespace luabridge;
 
 void CreateBullet(float x, float y, float speed, float direction, float radius)
 {
-	auto& engine = STGEngine::getInstance();
-	engine.bullets.emplace_back(x, y, speed, direction, radius);
+	auto& game = Game::getInstance();
+	game.engine->bullets.emplace_back(x, y, speed, direction, radius);
 }
 
 void CreateBoss(LuaRef bossData)
 {
-	auto& engine = STGEngine::getInstance();
-	engine.boss = std::make_unique<Boss>(bossData);
+	auto& game = Game::getInstance();
+	game.engine->boss = std::make_unique<Boss>(bossData);
 }
 
 float BossGetX(Boss* b)
@@ -32,12 +31,14 @@ float BossGetY(Boss* b)
 
 float PlayerGetX(int playerInd)
 {
-	return STGEngine::getInstance().player.getX();
+	auto& game = Game::getInstance();
+	return game.engine->player.getX();
 }
 
 float PlayerGetY(int playerInd)
 {
-	return STGEngine::getInstance().player.getY();
+	auto& game = Game::getInstance();
+	return game.engine->player.getY();
 }
 
 Script::Script() :
@@ -55,9 +56,11 @@ Script::Script() :
 		.addFunction("BossGetY", BossGetY)
 		.addFunction("PlayerGetX", PlayerGetX)
 		.addFunction("PlayerGetY", PlayerGetY)
+
 		.addFunction("point_direction", math::point_direction)
 		.addFunction("point_distance", math::point_distance)
 		.addFunction("random", math::random)
+		
 		.beginClass<Boss>("_C_BOSS")
 		.endClass();
 }
@@ -77,10 +80,10 @@ void Script::load(const std::string& fname)
 
 void Script::update(float delta)
 {
-	auto& engine = STGEngine::getInstance();
+	auto& game = Game::getInstance();
 	setGlobal(m_L.get(), delta, "Delta");
-	setGlobal(m_L.get(), engine.player.getX(), "PlayerX");
-	setGlobal(m_L.get(), engine.player.getY(), "PlayerY");
+	setGlobal(m_L.get(), game.engine->player.getX(), "PlayerX");
+	setGlobal(m_L.get(), game.engine->player.getY(), "PlayerY");
 	
 	if (!m_co.isNil())
 		LuaRef r = getGlobal(m_L.get(), "coroutine")["resume"](m_co);
