@@ -19,27 +19,12 @@ void CreateBoss(LuaRef bossData)
 	game.engine->boss = std::make_unique<Boss>(bossData);
 }
 
-float BossGetX(Boss* b)
-{
-	return b->getX();
-}
-
-float BossGetY(Boss* b)
-{
-	return b->getY();
-}
-
-float PlayerGetX(int playerInd)
-{
-	auto& game = Game::getInstance();
-	return game.engine->player.getX();
-}
-
-float PlayerGetY(int playerInd)
-{
-	auto& game = Game::getInstance();
-	return game.engine->player.getY();
-}
+//void DoFile(const std::string& fname, lua_State* L)
+//{
+//	std::string path = "Scripts/" + fname;
+//	if (luaL_dofile(L, path.c_str()) != LUA_OK)
+//		Log(lua_tostring(L, -1));
+//}
 
 Script::Script() :
 	m_L(luaL_newstate(), lua_close),
@@ -47,22 +32,13 @@ Script::Script() :
 {
 	luaL_requiref(m_L.get(), "_G", luaopen_base, 1);
 	luaL_requiref(m_L.get(), LUA_COLIBNAME, luaopen_coroutine, 1);
-	lua_pop(m_L.get(), 2);
-	
-	getGlobalNamespace(m_L.get())
-		.addFunction("CreateBullet", CreateBullet)
-		.addFunction("CreateBoss", CreateBoss)
-		.addFunction("BossGetX", BossGetX)
-		.addFunction("BossGetY", BossGetY)
-		.addFunction("PlayerGetX", PlayerGetX)
-		.addFunction("PlayerGetY", PlayerGetY)
+	luaL_requiref(m_L.get(), LUA_MATHLIBNAME, luaopen_math, 1);
+	lua_pop(m_L.get(), 3);
 
-		.addFunction("point_direction", math::point_direction)
-		.addFunction("point_distance", math::point_distance)
-		.addFunction("random", math::random)
-		
-		.beginClass<Boss>("_C_BOSS")
-		.endClass();
+	mRegister();
+
+	if (luaL_dofile(m_L.get(), "Scripts/std.lua") != LUA_OK)
+		Log(lua_tostring(m_L.get(), -1));
 }
 
 void Script::load(const std::string& fname)
@@ -82,9 +58,19 @@ void Script::update(float delta)
 {
 	auto& game = Game::getInstance();
 	setGlobal(m_L.get(), delta, "Delta");
-	setGlobal(m_L.get(), game.engine->player.getX(), "PlayerX");
-	setGlobal(m_L.get(), game.engine->player.getY(), "PlayerY");
-	
+	setGlobal(m_L.get(), &game.engine->player, "Player");
+
 	if (!m_co.isNil())
 		LuaRef r = getGlobal(m_L.get(), "coroutine")["resume"](m_co);
+}
+
+void Script::mRegister()
+{
+	getGlobalNamespace(m_L.get())
+		.addFunction("CreateBullet", CreateBullet)
+		.addFunction("CreateBoss", CreateBoss);
+		//.addFunction("DoFile", DoFile);
+
+	Player::luaRegister(getGlobalNamespace(m_L.get()));
+	Boss::luaRegister(getGlobalNamespace(m_L.get()));
 }

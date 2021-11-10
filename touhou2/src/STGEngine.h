@@ -47,22 +47,22 @@ private:
 	constexpr static int m_hudX = 16;
 	constexpr static int m_hudY = 32;
 	
-	void m_updateAll(float delta);
-	void m_moveAll(float delta);
-	void m_checkBoundsAll();
+	void mUpdateAll(float delta);
+	void mMoveAll(float delta);
+	void mCheckBoundsAll();
 
-	void m_moveHighP(float physicsDelta);
-	void m_moveLowP(float delta);
-	void m_checkCollisionsHighP();
-	void m_checkCollisionsLowP();
+	void mMoveHighP(float physicsDelta);
+	void mMoveLowP(float delta);
+	void mCheckCollisionsHighP();
+	void mCheckCollisionsLowP();
 
-	void m_drawAll(float delta) const;
-	void m_batchBullets(float delta) const;
-	void m_debugDraw(float delta) const;
+	void mDrawAll(float delta) const;
+	void mBatchBullets(float delta) const;
+	void mDebugDraw(float delta) const;
 
-	void m_drawBg(sf::RenderTarget& target, float delta) const;
-	void m_drawPlayArea(sf::RenderTarget& target, float delta) const;
-	void m_drawHud(sf::RenderTarget& target, float delta) const;
+	void mDrawBg(sf::RenderTarget& target, float delta) const;
+	void mDrawPlayArea(sf::RenderTarget& target, float delta) const;
+	void mDrawHud(sf::RenderTarget& target, float delta) const;
 
 	State m_state{};
 

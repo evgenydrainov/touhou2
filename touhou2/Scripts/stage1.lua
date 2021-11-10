@@ -1,69 +1,30 @@
-PHASE_NONSPELL			= 1
-PHASE_SPELLCARD 		= 2
-
-function Wait(t)
-	while t > 0 do
-		t = t - 1
-		coroutine.yield()
-	end
-end
-
 local YoumuNonspell1 = {
-	Type = PHASE_NONSPELL,
 	Hp = 100,
 	Time = 40,
 	Script = function(self)
 		while true do
-			local x = BossGetX(self)
-			local y = BossGetY(self)
-			CreateBullet(x, y, 5, point_direction(x, y, PlayerGetX(0), PlayerGetY(0)), 3)
-			Wait(15)
-		end
-	end
-}
-
-local YoumuNonspell2 = {
-	Type = PHASE_NONSPELL,
-	Hp = 120,
-	Time = 50,
-	Script = function(self)
-		while true do
-			local x = BossGetX(self)
-			local y = BossGetY(self)
-			CreateBullet(x, y, 6, point_direction(x, y, PlayerGetX(0), PlayerGetY(0)), 4)
-			Wait(10)
-		end
-	end
-}
-
-local YoumuSpellcardA = {
-	Type = PHASE_SPELLCARD,
-	Name = '',
-	Background = -1,
-	Hp = 110,
-	Time = 45,
-	Script = function(self)
-		while true do
-			local x = BossGetX(self)
-			local y = BossGetY(self)
-			CreateBullet(x, y, 5.5, point_direction(x, y, PlayerGetX(0), PlayerGetY(0)), 3.5)
-			Wait(12.5)
-		end
-	end
-}
-
-local YoumuSpellcardB = {
-	Type = PHASE_SPELLCARD,
-	Name = '',
-	Background = -1,
-	Hp = 130,
-	Time = 55,
-	Script = function(self)
-		while true do
-			local x = BossGetX(self)
-			local y = BossGetY(self)
-			CreateBullet(x, y, 6.5, point_direction(x, y, PlayerGetX(0), PlayerGetY(0)), 4.5)
-			Wait(7.5)
+			local dir = point_direction(self.x, self.y, Player.x, Player.y)
+			
+			local startx = self.x + lengthdir_x(50, dir)
+			local starty = self.y + lengthdir_y(50, dir)
+			
+			local endx = startx - lengthdir_x(100, dir)
+			local endy = starty - lengthdir_y(100, dir)
+			
+			local i
+			for i = 1, 10 do
+				local x = lerp(startx, endx, i / 10)
+				local y = lerp(starty, endy, i / 10)
+				
+				local n = 5 - math.abs(5 - i)
+				
+				CreateBullet(x + lengthdir_x(20 * n, dir + 90), y + lengthdir_y(20 * n, dir + 90), 0, dir, 3)
+				CreateBullet(x + lengthdir_x(20 * n, dir - 90), y + lengthdir_y(20 * n, dir - 90), 0, dir, 3)
+				
+				Wait(15)
+			end
+			
+			Wait(120)
 		end
 	end
 }
@@ -71,8 +32,7 @@ local YoumuSpellcardB = {
 local Youmu = {
 	Name = 'Youmu Konpaku',
 	Phases = {
-	[0]=YoumuNonspell1, YoumuSpellcardA,
-		YoumuNonspell2, YoumuSpellcardB
+	[0]=YoumuNonspell1
 	},
 	Healthbars = {
 	[0]={ [0]= 0, 1 },

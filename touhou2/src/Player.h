@@ -1,6 +1,9 @@
 #pragma once
 #include "GameObject.h"
+
 #include <SFML/Graphics.hpp>
+#include <lua.hpp>
+#include <LuaBridge/LuaBridge.h>
 
 class Player : public GameObject
 {
@@ -13,6 +16,8 @@ public:
 	void animate(float delta);
 	void draw(sf::RenderTexture& target, float delta) const;
 
+	static void luaRegister(luabridge::Namespace nameSpace);
+
 	inline int getScore() const { return m_score; }
 	inline int getLives() const { return m_lives; }
 	inline int getBombs() const { return m_bombs; }
@@ -21,18 +26,6 @@ public:
 	inline int getPoint() const { return m_point; }
 	inline int getPointNext() const { return 50; }
 	inline int getPowerMax() const { return m_powerMax; }
-	
-private:
-	// states
-	using State = void(Player::*)(float delta);
-
-	void normalState(float delta);
-	void dyingState(float delta);
-	void appearingState(float delta);
-
-	void setNormalState();
-	void setDyingState();
-	void setAppearingState();
 
 private:
 	constexpr static float m_moveSpeed = 4.0f;
@@ -48,6 +41,16 @@ private:
 	constexpr static float m_appearTime = 60.0f;
 
 	constexpr static int m_powerMax = 128;
+
+	using State = void(Player::*)(float);
+
+	void mNormalState(float delta);
+	void mDyingState(float delta);
+	void mAppearingState(float delta);
+
+	void mSetNormalState();
+	void mSetDyingState();
+	void mSetAppearingState();
 
 	State m_state = nullptr;
 

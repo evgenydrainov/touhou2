@@ -8,10 +8,10 @@
 
 Player::Player()
 {
+	m_radius = 2.0f;
 	m_x = m_startX;
 	m_y = m_startY;
-	m_radius = 2.0f;
-	setNormalState();
+	mSetNormalState();
 }
 
 void Player::update(float delta)
@@ -22,13 +22,13 @@ void Player::update(float delta)
 
 void Player::checkCollisions()
 {
-	if (m_state == &Player::normalState)
+	if (m_state == &Player::mNormalState)
 	{
 		auto& game = Game::getInstance();
 		for (auto b = game.engine->bullets.begin(); b != game.engine->bullets.end(); )
 			if (col::circle_vs_circle(m_x, m_y, m_radius, b->getX(), b->getY(), b->getRadius()))
 			{
-				setDyingState();
+				mSetDyingState();
 				b = game.engine->bullets.erase(b);
 				return;
 			}
@@ -41,7 +41,7 @@ void Player::checkCollisions()
 
 void Player::checkBounds()
 {
-	if (m_state != &Player::appearingState)
+	if (m_state != &Player::mAppearingState)
 	{
 		m_x = std::clamp(m_x, 0.0f, (float)STGEngine::playAreaW);
 		m_y = std::clamp(m_y, 0.0f, (float)STGEngine::playAreaH);
@@ -61,7 +61,16 @@ void Player::draw(sf::RenderTexture& target, float delta) const
 	target.draw(r);
 }
 
-void Player::normalState(float delta)
+void Player::luaRegister(luabridge::Namespace nameSpace)
+{
+	nameSpace
+		.beginClass<Player>("_C_PLAYER")
+		.addProperty("x", &Player::getX)
+		.addProperty("y", &Player::getY)
+		.endClass();
+}
+
+void Player::mNormalState(float delta)
 {
 	auto& input = Input::getInstance();
 	auto& game = Game::getInstance();
@@ -94,7 +103,7 @@ void Player::normalState(float delta)
 		}
 }
 
-void Player::dyingState(float delta)
+void Player::mDyingState(float delta)
 {
 	auto& input = Input::getInstance();
 	auto& game = Game::getInstance();
@@ -104,11 +113,11 @@ void Player::dyingState(float delta)
 		if (m_lives > 0)
 		{
 			m_lives--;
-			setAppearingState();
+			mSetAppearingState();
 		}
 		else
 		{
-			m_dead = true;
+			die();
 			return;
 		}
 	}
@@ -121,13 +130,13 @@ void Player::dyingState(float delta)
 			{
 				game.engine->bullets.clear();
 				m_bombs--;
-				setNormalState();
+				mSetNormalState();
 			}
 		}
 	}
 }
 
-void Player::appearingState(float delta)
+void Player::mAppearingState(float delta)
 {
 	m_appearTimer += delta;
 	m_x = math::lerp(m_appearX, m_startX, m_appearTimer / m_appearTime);
@@ -136,25 +145,27 @@ void Player::appearingState(float delta)
 	{
 		m_x = m_startX;
 		m_y = m_startY;
-		setNormalState();
+		mSetNormalState();
 	}
 }
 
-void Player::setNormalState()
+void Player::mSetNormalState()
 {
-	m_state = &Player::normalState;
+	m_state = &Player::mNormalState;
 	m_fireTimer = 0.0f;
 }
 
-void Player::setDyingState()
+void Player::mSetDyingState()
 {
-	m_state = &Player::dyingState;
+	m_state = &Player::mDyingState;
 	m_deathbombTimer = m_deathbombTime;
+	m_xspeed = 0.0f;
+	m_yspeed = 0.0f;
 }
 
-void Player::setAppearingState()
+void Player::mSetAppearingState()
 {
-	m_state = &Player::appearingState;
+	m_state = &Player::mAppearingState;
 	m_appearTimer = 0.0f;
 	m_x = m_appearX;
 	m_y = m_appearY;

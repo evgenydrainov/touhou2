@@ -14,7 +14,7 @@ void Game::run()
 	m_gameSurf.create(gameW, gameH);
 	simsun.loadFromFile("Fonts/simsunb.ttf");
 
-	state = State::Gameplay;
+	m_state = State::Gameplay;
 	engine = std::make_unique<STGEngine>();
 
 	sf::Clock c;
@@ -22,7 +22,7 @@ void Game::run()
 	{
 		m_skipFrame = false;
 
-		m_handleEvents();
+		mHandleEvents();
 
 		if (!m_window.hasFocus())
 			m_skipFrame = true;
@@ -31,13 +31,13 @@ void Game::run()
 		float delta = t.asSeconds() * 60.0f;
 
 		if (!m_skipFrame)
-			m_tick(delta);
+			mTick(delta);
 
-		m_render();
+		mRender();
 	}
 }
 
-void Game::m_handleEvents()
+void Game::mHandleEvents()
 {
 	sf::Event e;
 	while (m_window.pollEvent(e))
@@ -53,7 +53,7 @@ void Game::m_handleEvents()
 		}
 }
 
-void Game::m_tick(float delta)
+void Game::mTick(float delta)
 {
 	auto& input = Input::getInstance();
 
@@ -63,7 +63,7 @@ void Game::m_tick(float delta)
 	if (key_pressed<sf::Keyboard::F2>())
 	{
 		// restart
-		state = State::Gameplay;
+		m_state = State::Gameplay;
 		engine = nullptr;
 		engine = std::make_unique<STGEngine>();
 	}
@@ -74,11 +74,11 @@ void Game::m_tick(float delta)
 	//	m_window.setVerticalSyncEnabled(true);
 	//}
 
-	m_update(delta);
+	mUpdate(delta);
 
 	m_gameSurf.clear();
 
-	m_draw(m_gameSurf, delta);
+	mDraw(m_gameSurf, delta);
 
 	m_displayFpsCount += 60.0f / delta;
 	m_displayFpsCountN += 1.0f;
@@ -115,7 +115,7 @@ void Game::m_tick(float delta)
 	m_gameSurf.display();
 }
 
-void Game::m_render() const
+void Game::mRender() const
 {
 	m_window.clear();
 
@@ -134,9 +134,9 @@ void Game::m_render() const
 	m_window.display();
 }
 
-void Game::m_update(float delta)
+void Game::mUpdate(float delta)
 {
-	switch (state)
+	switch (m_state)
 	{
 	case State::Gameplay:
 		engine->update(delta);
@@ -144,9 +144,9 @@ void Game::m_update(float delta)
 	}
 }
 
-void Game::m_draw(sf::RenderTarget& target, float delta) const
+void Game::mDraw(sf::RenderTarget& target, float delta) const
 {
-	switch (state)
+	switch (m_state)
 	{
 	case State::Gameplay:
 		engine->draw(target, delta);

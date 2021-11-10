@@ -13,6 +13,11 @@ public:
 	{
 		float hp, time;
 		luabridge::LuaRef script;
+
+		Phase(float hp, float time, luabridge::LuaRef script) :
+			hp(hp), time(time), script(script)
+		{
+		}
 	};
 
 	Boss(luabridge::LuaRef bossData);
@@ -21,17 +26,20 @@ public:
 	void checkCollisions();
 	void draw(sf::RenderTexture& target, float delta) const;
 
+	static void luaRegister(luabridge::Namespace nameSpace);
+
+	float getMaxHp() const;
+
 	inline const std::string& getName() const { return m_name; }
 	inline float getHp() const { return m_hp; }
-	float getMaxHp() const;
 	inline size_t getPhase() const { return m_phaseInd + 1; }
 	inline size_t getPhasesAmount() const { return m_phases.size(); }
 	inline float getTimer() const { return m_timer; }
 
 private:
-	void m_startPhase();
-	void m_endPhase();
-	void m_getDamage(float dmg);
+	void mStartPhase();
+	void mEndPhase();
+	void mGetDamage(float dmg);
 
 	std::string m_name;
 	float m_hp = 0.0f;

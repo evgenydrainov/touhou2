@@ -16,7 +16,7 @@ void GameObject::setVelocity(float speed, float direction)
 
 float GameObject::getSpeed() const
 {
-	return math::point_direction(0.0f, 0.0f, m_xspeed, m_yspeed);
+	return math::point_distance(0.0f, 0.0f, m_xspeed, m_yspeed);
 }
 
 float GameObject::getDirection() const

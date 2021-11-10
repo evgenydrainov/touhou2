@@ -21,13 +21,13 @@ Boss::Boss(luabridge::LuaRef bossData) :
 	LuaRef phase = phases[i];
 	while (!phase.isNil())
 	{
-		m_phases.push_back({ phase["Hp"], phase["Time"], phase["Script"] });
+		m_phases.emplace_back(phase["Hp"], phase["Time"], phase["Script"]);
 		i++;
 		phase = phases[i];
 	}
 
 	m_phaseInd = 0;
-	m_startPhase();
+	mStartPhase();
 }
 
 void Boss::update(float delta)
@@ -37,7 +37,7 @@ void Boss::update(float delta)
 
 	m_timer -= delta / 60.0f;
 	if (m_timer <= 0.0f)
-		m_endPhase();
+		mEndPhase();
 }
 
 void Boss::checkCollisions()
@@ -46,7 +46,7 @@ void Boss::checkCollisions()
 	for (auto pb = game.engine->playerBullets.begin(); pb != game.engine->playerBullets.end(); )
 		if (col::circle_vs_circle(m_x, m_y, m_radius, pb->getX(), pb->getY(), pb->getRadius()))
 		{
-			m_getDamage(10.0f);
+			mGetDamage(10.0f);
 			pb = game.engine->playerBullets.erase(pb);
 		}
 		else
@@ -64,6 +64,15 @@ void Boss::draw(sf::RenderTexture& target, float delta) const
 	target.draw(r);
 }
 
+void Boss::luaRegister(luabridge::Namespace nameSpace)
+{
+	nameSpace
+		.beginClass<Boss>("_C_BOSS")
+		.addProperty("x", &Boss::m_x)
+		.addProperty("y", &Boss::m_y)
+		.endClass();
+}
+
 float Boss::getMaxHp() const
 {
 	if (m_phaseInd >= 0 && m_phaseInd < m_phases.size())
@@ -72,7 +81,7 @@ float Boss::getMaxHp() const
 	return 0.0f;
 }
 
-void Boss::m_startPhase()
+void Boss::mStartPhase()
 {
 	if (m_phaseInd >= 0 && m_phaseInd < m_phases.size())
 	{
@@ -82,23 +91,24 @@ void Boss::m_startPhase()
 	}
 }
 
-void Boss::m_endPhase()
+void Boss::mEndPhase()
 {
 	if (m_phaseInd + 1 < m_phases.size())
 	{
 		m_phaseInd++;
-		m_startPhase();
+		mStartPhase();
 	}
 	else
 	{
 		m_co = Nil();
-		m_dead = true;
+		die();
+		return;
 	}
 }
 
-void Boss::m_getDamage(float dmg)
+void Boss::mGetDamage(float dmg)
 {
 	m_hp -= dmg;
 	if (m_hp <= 0.0f)
-		m_endPhase();
+		mEndPhase();
 }

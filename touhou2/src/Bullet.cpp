@@ -15,5 +15,8 @@ Bullet::Bullet(float x, float y, float speed, float direction, float radius)
 void Bullet::checkBounds()
 {
 	if (m_x < 0.0f || m_y < 0.0f || m_x >= STGEngine::playAreaW || m_y >= STGEngine::playAreaH)
-		m_dead = true;
+	{
+		die();
+		return;
+	}
 }

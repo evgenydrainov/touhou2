@@ -35,9 +35,9 @@ void STGEngine::update(float delta)
 	switch (m_state)
 	{
 	case State::Normal:
-		m_updateAll(delta);
-		m_moveAll(delta);
-		m_checkBoundsAll();
+		mUpdateAll(delta);
+		mMoveAll(delta);
+		mCheckBoundsAll();
 		break;
 
 	case State::GameOver:
@@ -67,7 +67,7 @@ void STGEngine::draw(sf::RenderTarget& target, float delta) const
 	sf::Clock c;
 	
 	m_playArea.clear();
-	m_drawAll(delta);
+	mDrawAll(delta);
 	//debugDraw(delta);
 
 	if (m_state == State::GameOver)
@@ -91,14 +91,14 @@ void STGEngine::draw(sf::RenderTarget& target, float delta) const
 
 	m_playArea.display();
 
-	m_drawBg(target, delta);
-	m_drawPlayArea(target, delta);
-	m_drawHud(target, delta);
+	mDrawBg(target, delta);
+	mDrawPlayArea(target, delta);
+	mDrawHud(target, delta);
 
 	//Log("Draw: ", c.restart().asSeconds() * 60.0f);
 }
 
-void STGEngine::m_updateAll(float delta)
+void STGEngine::mUpdateAll(float delta)
 {
 	m_script.update(delta);
 
@@ -117,7 +117,7 @@ void STGEngine::m_updateAll(float delta)
 	}
 }
 
-void STGEngine::m_moveAll(float delta)
+void STGEngine::mMoveAll(float delta)
 {
 	constexpr size_t steps = 5;
 	constexpr float step = 1.0f / steps;
@@ -126,15 +126,15 @@ void STGEngine::m_moveAll(float delta)
 	
 	for (size_t i = 0; i < steps; i++)
 	{
-		m_moveHighP(physicsDelta);
-		m_checkCollisionsHighP();
+		mMoveHighP(physicsDelta);
+		mCheckCollisionsHighP();
 	}
 
-	m_moveLowP(delta);
-	m_checkCollisionsLowP();
+	mMoveLowP(delta);
+	mCheckCollisionsLowP();
 }
 
-void STGEngine::m_checkBoundsAll()
+void STGEngine::mCheckBoundsAll()
 {
 	player.checkBounds();
 	
@@ -157,7 +157,7 @@ void STGEngine::m_checkBoundsAll()
 	}
 }
 
-void STGEngine::m_moveHighP(float physicsDelta)
+void STGEngine::mMoveHighP(float physicsDelta)
 {
 	for (Bullet& b : bullets)
 		b.move(physicsDelta);
@@ -165,7 +165,7 @@ void STGEngine::m_moveHighP(float physicsDelta)
 	player.move(physicsDelta);
 }
 
-void STGEngine::m_moveLowP(float delta)
+void STGEngine::mMoveLowP(float delta)
 {
 	for (Bullet& pb : playerBullets)
 		pb.move(delta);
@@ -174,31 +174,31 @@ void STGEngine::m_moveLowP(float delta)
 		boss->move(delta);
 }
 
-void STGEngine::m_checkCollisionsHighP()
+void STGEngine::mCheckCollisionsHighP()
 {
 	player.checkCollisions();
 }
 
-void STGEngine::m_checkCollisionsLowP()
+void STGEngine::mCheckCollisionsLowP()
 {
 	if (boss)
 		boss->checkCollisions();
 }
 
-void STGEngine::m_drawAll(float delta) const
+void STGEngine::mDrawAll(float delta) const
 {
 	player.draw(m_playArea, delta);
 
 	if (boss)
 		boss->draw(m_playArea, delta);
 
-	m_batchBullets(delta);
+	mBatchBullets(delta);
 
 	for (const Bullet& pb : playerBullets)
 		draw::circle(m_playArea, pb.getX(), pb.getY(), pb.getRadius(), sf::Color::Green);
 }
 
-void STGEngine::m_batchBullets(float delta) const
+void STGEngine::mBatchBullets(float delta) const
 {
 	m_bulletsBuf.clear();
 	for (const Bullet& b : bullets)
@@ -223,7 +223,7 @@ void STGEngine::m_batchBullets(float delta) const
 	m_playArea.draw(m_bulletsBuf, s);
 }
 
-void STGEngine::m_debugDraw(float delta) const
+void STGEngine::mDebugDraw(float delta) const
 {
 	draw::circle(m_playArea, player.getX(), player.getY(), player.getRadius(), sf::Color::Green);
 
@@ -231,19 +231,19 @@ void STGEngine::m_debugDraw(float delta) const
 		draw::circle(m_playArea, b.getX(), b.getY(), b.getRadius(), sf::Color::Red);
 }
 
-void STGEngine::m_drawBg(sf::RenderTarget& target, float delta) const
+void STGEngine::mDrawBg(sf::RenderTarget& target, float delta) const
 {
 	target.draw(sf::Sprite(background));
 }
 
-void STGEngine::m_drawPlayArea(sf::RenderTarget& target, float delta) const
+void STGEngine::mDrawPlayArea(sf::RenderTarget& target, float delta) const
 {
 	sf::Sprite s(m_playArea.getTexture());
 	s.setPosition(playAreaX, playAreaY);
 	target.draw(s);
 }
 
-void STGEngine::m_drawHud(sf::RenderTarget& target, float delta) const
+void STGEngine::mDrawHud(sf::RenderTarget& target, float delta) const
 {
 	sf::Transform t;
 	t.translate(playAreaX, playAreaY);
