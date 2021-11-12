@@ -1,67 +1,80 @@
 #pragma once
-#include "GameObject.h"
-
 #include <SFML/Graphics.hpp>
 #include <lua.hpp>
 #include <LuaBridge/LuaBridge.h>
 
-class Player : public GameObject
+// NOTE: switch to xspeed/yspeed or get rid of speed completely?
+struct Player
 {
 public:
+	// player definitions
+	constexpr static int powerMax = 128;
+
+	constexpr static float moveSpeed = 4.0f;
+	constexpr static float focusSpeed = 2.0f;
+
+	constexpr static float startX = 384 / 2;
+	constexpr static float startY = 448 / 4 * 3;
+	constexpr static float appearX = 384 / 2;
+	constexpr static float appearY = 448;
+
+	constexpr static float fireTime = 10.0f;
+	constexpr static float deathbombTime = 15.0f;
+	constexpr static float appearTime = 60.0f;
+
+public:
+	// standard methods
 	Player();
 
 	void update(float delta);
-	void checkCollisions();
-	void checkBounds();
-	void animate(float delta);
+	void physicsUpdate(float delta);
+	void endUpdate(float delta);
 	void draw(sf::RenderTexture& target, float delta) const;
 
-	static void luaRegister(luabridge::Namespace nameSpace);
+public:
+	// standard fields
+	bool dead = false;
+	float x = 0.0f;
+	float y = 0.0f;
+	float speed = 0.0f;
+	float direction = 0.0f;
+	float radius = 0.0f;
 
-	inline int getScore() const { return m_score; }
-	inline int getLives() const { return m_lives; }
-	inline int getBombs() const { return m_bombs; }
-	inline int getPower() const { return m_power; }
-	inline int getGraze() const { return m_graze; }
-	inline int getPoint() const { return m_point; }
-	inline int getPointNext() const { return 50; }
-	inline int getPowerMax() const { return m_powerMax; }
+public:
+	// player methods
+	void getHit();
 
-private:
-	constexpr static float m_moveSpeed = 4.0f;
-	constexpr static float m_focusSpeed = 2.0f;
+public:
+	// player fields
+	int score = 0;
+	int lives = 5;
+	int bombs = 3;
+	int power = 0;
+	int graze = 0;
+	int point = 0;
 
-	constexpr static float m_startX = 384 / 2;
-	constexpr static float m_startY = 448 / 4 * 3;
-	constexpr static float m_appearX = 384 / 2;
-	constexpr static float m_appearY = 448;
+	bool focus = false;
+	float invincibility = 0.0f;
 
-	constexpr static float m_fireTime = 10.0f;
-	constexpr static float m_deathbombTime = 15.0f;
-	constexpr static float m_appearTime = 60.0f;
+	float fireTimer = 0.0f;
+	float deathbombTimer = 0.0f;
+	float appearTimer = 0.0f;
 
-	constexpr static int m_powerMax = 128;
-
+public:
+	// states
 	using State = void(Player::*)(float);
 
-	void mNormalState(float delta);
-	void mDyingState(float delta);
-	void mAppearingState(float delta);
+	void normalState(float delta);
+	void dyingState(float delta);
+	void appearingState(float delta);
 
-	void mSetNormalState();
-	void mSetDyingState();
-	void mSetAppearingState();
+	void setNormalState();
+	void setDyingState();
+	void setAppearingState();
 
-	State m_state = nullptr;
+	State state = nullptr;
 
-	int m_score = 0;
-	int m_lives = 5;
-	int m_bombs = 3;
-	int m_power = 0;
-	int m_graze = 0;
-	int m_point = 0;
-
-	float m_fireTimer = 0.0f;
-	float m_deathbombTimer = 0.0f;
-	float m_appearTimer = 0.0f;
+public:
+	// other
+	static void luaRegister(luabridge::Namespace nameSpace);
 };

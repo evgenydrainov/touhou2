@@ -5,6 +5,9 @@
 
 #include "Script.h"
 
+#include "PauseMenu.h"
+#include "GameOverMenu.h"
+
 #include <SFML/Graphics.hpp>
 #include <memory>
 
@@ -29,6 +32,11 @@ public:
 	void update(float delta);
 	void draw(sf::RenderTarget& target, float delta) const;
 
+	void resume();
+	void useContinue();
+
+	inline void toggle_hitboxes() { m_show_hitboxes ^= true; }
+
 	sf::Texture projectiles;
 	sf::Texture background;
 	sf::Texture hud;
@@ -48,14 +56,12 @@ private:
 	constexpr static int m_hudY = 32;
 	
 	void mUpdateAll(float delta);
-	void mMoveAll(float delta);
-	void mCheckBoundsAll();
+	void mPhysicsUpdateAll(float delta);
+	void mEndUpdateAll(float delta);
 
-	void mMoveHighP(float physicsDelta);
-	void mMoveLowP(float delta);
-	void mCheckCollisionsHighP();
-	void mCheckCollisionsLowP();
-
+	void mPhysicsUpdateHighP(float physicsDelta);
+	void mPhysicsUpdateLowP(float delta);
+	
 	void mDrawAll(float delta) const;
 	void mBatchBullets(float delta) const;
 	void mDebugDraw(float delta) const;
@@ -68,4 +74,9 @@ private:
 
 	mutable sf::VertexArray m_bulletsBuf{ sf::Quads };
 	mutable sf::RenderTexture m_playArea;
+
+	bool m_show_hitboxes = false;
+
+	std::unique_ptr<PauseMenu> m_pauseMenu;
+	std::unique_ptr<GameOverMenu> m_gameOverMenu;
 };

@@ -161,7 +161,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="src\GameObject.cpp" />
+    <ClCompile Include="src\Pickup.cpp" />
+    <ClCompile Include="src\GameOverMenu.cpp" />
+    <ClCompile Include="src\PauseMenu.cpp" />
     <ClCompile Include="src\Boss.cpp" />
     <ClCompile Include="src\fmt\format.cc" />
     <ClCompile Include="src\Game.cpp" />
@@ -174,8 +176,10 @@
     <ClCompile Include="src\Text.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\Pickup.h" />
+    <ClInclude Include="src\GameOverMenu.h" />
+    <ClInclude Include="src\PauseMenu.h" />
     <ClInclude Include="src\key_pressed.h" />
-    <ClInclude Include="src\GameObject.h" />
     <ClInclude Include="src\Boss.h" />
     <ClInclude Include="src\collisions.h" />
     <ClInclude Include="src\drawing.h" />

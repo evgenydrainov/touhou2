@@ -13,6 +13,12 @@ void CreateBullet(float x, float y, float speed, float direction, float radius)
 	game.engine->bullets.emplace_back(x, y, speed, direction, radius);
 }
 
+void CreateBulletB(float x, float y, float speed, float direction, float radius, LuaRef script)
+{
+	auto& game = Game::getInstance();
+	
+}
+
 void CreateBoss(LuaRef bossData)
 {
 	auto& game = Game::getInstance();
@@ -57,20 +63,34 @@ void Script::load(const std::string& fname)
 void Script::update(float delta)
 {
 	auto& game = Game::getInstance();
-	setGlobal(m_L.get(), delta, "Delta");
 	setGlobal(m_L.get(), &game.engine->player, "Player");
 
-	if (!m_co.isNil())
-		LuaRef r = getGlobal(m_L.get(), "coroutine")["resume"](m_co);
+	m_timer += delta;
+	while (m_timer > 0.0f)
+	{
+		if (!m_finished)
+			if (!m_co.isNil())
+			{
+				LuaRef r = getGlobal(m_L.get(), "coroutine")["resume"](m_co);
+				if (!r.cast<bool>())
+					m_finished = true;
+			}
+
+		m_timer--;
+	}
 }
 
 void Script::mRegister()
 {
 	getGlobalNamespace(m_L.get())
 		.addFunction("CreateBullet", CreateBullet)
+		.addFunction("CreateBulletB", CreateBulletB)
 		.addFunction("CreateBoss", CreateBoss);
 		//.addFunction("DoFile", DoFile);
 
 	Player::luaRegister(getGlobalNamespace(m_L.get()));
+
+	//Bullet::luaRegister(getGlobalNamespace(m_L.get()));
+
 	Boss::luaRegister(getGlobalNamespace(m_L.get()));
 }

@@ -19,6 +19,8 @@ public:
 
 	sf::Font simsun;
 
+	unsigned long long frame = 0;
+
 private:
 	enum class State
 	{

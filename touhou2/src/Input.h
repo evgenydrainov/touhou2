@@ -43,7 +43,7 @@ public:
 	constexpr bool checkReleased(State key) const { return m_stateRelease & key; }
 
 private:
-	State m_state;
-	State m_statePress;
-	State m_stateRelease;
+	State m_state = 0;
+	State m_statePress = 0;
+	State m_stateRelease = 0;
 };

@@ -1,14 +1,12 @@
 #pragma once
-#include "GameObject.h"
-
 #include <lua.hpp>
 #include <LuaBridge/LuaBridge.h>
-
 #include <SFML/Graphics.hpp>
 
-class Boss : public GameObject
+struct Boss
 {
 public:
+	// boss definitions
 	struct Phase
 	{
 		float hp, time;
@@ -20,32 +18,48 @@ public:
 		}
 	};
 
+public:
+	// standard methods
 	Boss(luabridge::LuaRef bossData);
 
 	void update(float delta);
-	void checkCollisions();
+	void physicsUpdate(float delta);
+	void endUpdate(float delta);
 	void draw(sf::RenderTexture& target, float delta) const;
 
-	static void luaRegister(luabridge::Namespace nameSpace);
+public:
+	// standard fields
+	bool dead = false;
+	float x = 0.0f;
+	float y = 0.0f;
+	float speed = 0.0f;
+	float direction = 0.0f;
+	float acc = 0.0f;
+	float speedMin = 0.0f;
+	float radius = 0.0f;
 
+public:
+	// boss methods
 	float getMaxHp() const;
+	size_t getPhasesLeft() const;
 
-	inline const std::string& getName() const { return m_name; }
-	inline float getHp() const { return m_hp; }
-	inline size_t getPhase() const { return m_phaseInd + 1; }
-	inline size_t getPhasesAmount() const { return m_phases.size(); }
-	inline float getTimer() const { return m_timer; }
+	void startPhase();
+	void endPhase();
+	void getDamage(float dmg);
 
-private:
-	void mStartPhase();
-	void mEndPhase();
-	void mGetDamage(float dmg);
+public:
+	// boss fields
+	float hp = 0.0f;
+	float timer = 0.0f;
+	size_t phaseInd = 0;
+	std::string name;
+	std::vector<Phase> phases;
 
-	std::string m_name;
-	float m_hp = 0.0f;
-	std::vector<Phase> m_phases;
-	size_t m_phaseInd = 0;
-	float m_timer = 0.0f;
+	luabridge::LuaRef co;
+	float co_timer = 0.0f;
+	bool co_finished = false;
 
-	luabridge::LuaRef m_co;
+public:
+	// other
+	static void luaRegister(luabridge::Namespace nameSpace);
 };

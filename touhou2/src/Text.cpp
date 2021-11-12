@@ -2,6 +2,8 @@
 
 #include "Game.h"
 
+#include "mymath.h"
+
 Text::Text()
 {
 	// defaults
@@ -36,6 +38,9 @@ void Text::align(HAlign halign, VAlign valign)
 		o.y = b.height + 2.0f * b.top;
 		break;
 	}
+
+	o.x = std::floor(o.x);
+	o.y = std::floor(o.y);
 
 	setOrigin(o);
 }

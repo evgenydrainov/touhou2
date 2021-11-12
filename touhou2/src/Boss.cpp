@@ -8,46 +8,64 @@
 
 using namespace luabridge;
 
-Boss::Boss(luabridge::LuaRef bossData) :
-	m_co(bossData.state())
+Boss::Boss(LuaRef bossData) :
+	co(bossData.state())
 {
-	m_x = STGEngine::playAreaW / 2;
-	m_y = STGEngine::playAreaH / 4;
+	x = STGEngine::playAreaW / 2;
+	y = STGEngine::playAreaH / 4;
 
-	m_name = bossData["Name"].cast<std::string>();
+	name = bossData["Name"].cast<std::string>();
 	
-	LuaRef phases = bossData["Phases"];
-	size_t i = 0;
-	LuaRef phase = phases[i];
-	while (!phase.isNil())
+	LuaRef _phases = bossData["Phases"];
+	size_t _i = 1;
+	LuaRef _phase = _phases[_i];
+	while (!_phase.isNil())
 	{
-		m_phases.emplace_back(phase["Hp"], phase["Time"], phase["Script"]);
-		i++;
-		phase = phases[i];
+		phases.emplace_back(_phase["Hp"], _phase["Time"], _phase["Script"]);
+		_i++;
+		_phase = _phases[_i];
 	}
 
-	m_phaseInd = 0;
-	mStartPhase();
+	phaseInd = 0;
+	startPhase();
 }
 
 void Boss::update(float delta)
 {
-	if (!m_co.isNil())
-		LuaRef r = getGlobal(m_co.state(), "coroutine")["resume"](m_co, this);
+	timer -= delta / 60.0f;
+	if (timer <= 0.0f)
+		endPhase();
 
-	m_timer -= delta / 60.0f;
-	if (m_timer <= 0.0f)
-		mEndPhase();
+	co_timer += delta;
+	while (co_timer > 0.0f)
+	{
+		if (!co_finished)
+			if (!co.isNil())
+			{
+				LuaRef r = getGlobal(co.state(), "coroutine")["resume"](co, this);
+				if (!r.cast<bool>())
+					co_finished = true;
+			}
+
+		co_timer--;
+	}
+
+	speed += acc * delta;
+	speed = std::max(speed, speedMin);
 }
 
-void Boss::checkCollisions()
+void Boss::physicsUpdate(float delta)
 {
+	x += speed * math::dcos(direction) * delta;
+	y += speed * -math::dsin(direction) * delta;
+
 	auto& game = Game::getInstance();
 	for (auto pb = game.engine->playerBullets.begin(); pb != game.engine->playerBullets.end(); )
-		if (col::circle_vs_circle(m_x, m_y, m_radius, pb->getX(), pb->getY(), pb->getRadius()))
+		if (col::circle_vs_circle(x, y, radius, pb->x, pb->y, pb->radius))
 		{
-			mGetDamage(10.0f);
+			getDamage(10.0f);
 			pb = game.engine->playerBullets.erase(pb);
+			// don't break, allow to get hit multiple times in 1 frame
 		}
 		else
 		{
@@ -55,60 +73,74 @@ void Boss::checkCollisions()
 		}
 }
 
+void Boss::endUpdate(float delta)
+{
+	// animation
+}
+
 void Boss::draw(sf::RenderTexture& target, float delta) const
 {
 	sf::RectangleShape r;
-	r.setPosition(m_x, m_y);
+	r.setPosition(x, y);
 	r.setSize(sf::Vector2f(24.0f, 48.0f));
 	r.setOrigin(12.0f, 24.0f);
 	target.draw(r);
 }
 
-void Boss::luaRegister(luabridge::Namespace nameSpace)
+void Boss::luaRegister(Namespace nameSpace)
 {
 	nameSpace
 		.beginClass<Boss>("_C_BOSS")
-		.addProperty("x", &Boss::m_x)
-		.addProperty("y", &Boss::m_y)
+		.addProperty("x", &Boss::x)
+		.addProperty("y", &Boss::y)
+		.addProperty("speed", &Boss::speed)
+		.addProperty("direction", &Boss::direction)
+		.addProperty("acc", &Boss::acc)
+		.addProperty("radius", &Boss::radius)
 		.endClass();
 }
 
 float Boss::getMaxHp() const
 {
-	if (m_phaseInd >= 0 && m_phaseInd < m_phases.size())
-		return m_phases[m_phaseInd].hp;
+	if (phaseInd >= 0 && phaseInd < phases.size())
+		return phases[phaseInd].hp;
 
-	return 0.0f;
+	return -1.0f;
 }
 
-void Boss::mStartPhase()
+size_t Boss::getPhasesLeft() const
 {
-	if (m_phaseInd >= 0 && m_phaseInd < m_phases.size())
+	return phases.size() - phaseInd;
+}
+
+void Boss::startPhase()
+{
+	if (phaseInd >= 0 && phaseInd < phases.size())
 	{
-		m_hp = m_phases[m_phaseInd].hp;
-		m_timer = m_phases[m_phaseInd].time;
-		m_co = getGlobal(m_co.state(), "coroutine")["create"](m_phases[m_phaseInd].script);
+		hp = phases[phaseInd].hp;
+		timer = phases[phaseInd].time;
+		co = getGlobal(co.state(), "coroutine")["create"](phases[phaseInd].script);
 	}
 }
 
-void Boss::mEndPhase()
+void Boss::endPhase()
 {
-	if (m_phaseInd + 1 < m_phases.size())
+	if (phaseInd + 1 < phases.size())
 	{
-		m_phaseInd++;
-		mStartPhase();
+		phaseInd++;
+		startPhase();
 	}
 	else
 	{
-		m_co = Nil();
-		die();
+		dead = true;
+		//co = Nil();
 		return;
 	}
 }
 
-void Boss::mGetDamage(float dmg)
+void Boss::getDamage(float dmg)
 {
-	m_hp -= dmg;
-	if (m_hp <= 0.0f)
-		mEndPhase();
+	hp -= dmg;
+	if (hp <= 0.0f)
+		endPhase();
 }

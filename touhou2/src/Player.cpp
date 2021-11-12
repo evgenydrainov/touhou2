@@ -6,167 +6,197 @@
 #include "mymath.h"
 #include "collisions.h"
 
+using namespace luabridge;
+
 Player::Player()
 {
-	m_radius = 2.0f;
-	m_x = m_startX;
-	m_y = m_startY;
-	mSetNormalState();
+	radius = 2.0f;
+	x = startX;
+	y = startY;
+	setNormalState();
 }
 
 void Player::update(float delta)
 {
-	if (m_state)
-		(this->*m_state)(delta);
+	if (state)
+		(this->*state)(delta);
 }
 
-void Player::checkCollisions()
+void Player::physicsUpdate(float physicsDelta)
 {
-	if (m_state == &Player::mNormalState)
+	if (state == &Player::normalState)
 	{
-		auto& game = Game::getInstance();
-		for (auto b = game.engine->bullets.begin(); b != game.engine->bullets.end(); )
-			if (col::circle_vs_circle(m_x, m_y, m_radius, b->getX(), b->getY(), b->getRadius()))
-			{
-				mSetDyingState();
-				b = game.engine->bullets.erase(b);
-				return;
-			}
-			else
-			{
-				++b;
-			}
+		x += speed * math::dcos(direction) * physicsDelta;
+		y += speed * -math::dsin(direction) * physicsDelta;
+
+		if (invincibility <= 0.0f)
+		{
+			auto& game = Game::getInstance();
+			for (auto b = game.engine->bullets.begin(); b != game.engine->bullets.end(); )
+				if (col::circle_vs_circle(x, y, radius, b->x, b->y, b->radius))
+				{
+					getHit();
+					b = game.engine->bullets.erase(b);
+					// don't get hit multiple times in 1 frame
+					break;
+				}
+				else
+				{
+					++b;
+				}
+		}
 	}
 }
 
-void Player::checkBounds()
+void Player::endUpdate(float delta)
 {
-	if (m_state != &Player::mAppearingState)
+	if (state != &Player::appearingState)
 	{
-		m_x = std::clamp(m_x, 0.0f, (float)STGEngine::playAreaW);
-		m_y = std::clamp(m_y, 0.0f, (float)STGEngine::playAreaH);
+		y = std::clamp(y, 0.0f, (float)STGEngine::playAreaH);
+		x = std::clamp(x, 0.0f, (float)STGEngine::playAreaW);
 	}
-}
 
-void Player::animate(float delta)
-{
+	// animation goes here
 }
 
 void Player::draw(sf::RenderTexture& target, float delta) const
 {
+	auto& game = Game::getInstance();
+
+	if (invincibility > 0.0f)
+		if (game.frame % 2 == 0)
+			return;
+
 	sf::RectangleShape r;
-	r.setPosition(m_x, m_y);
+	r.setPosition(x, y);
 	r.setSize({ 24.0f, 48.0f });
 	r.setOrigin(12.0f, 24.0f);
 	target.draw(r);
 }
 
-void Player::luaRegister(luabridge::Namespace nameSpace)
+void Player::getHit()
+{
+	setDyingState();
+	invincibility = 120.0f;
+}
+
+void Player::luaRegister(Namespace nameSpace)
 {
 	nameSpace
 		.beginClass<Player>("_C_PLAYER")
-		.addProperty("x", &Player::getX)
-		.addProperty("y", &Player::getY)
+		.addProperty("x", &Player::x)
+		.addProperty("y", &Player::y)
+		.addProperty("speed", &Player::speed)
+		.addProperty("direction", &Player::direction)
+		.addProperty("radius", &Player::radius)
 		.endClass();
 }
 
-void Player::mNormalState(float delta)
+void Player::normalState(float delta)
 {
 	auto& input = Input::getInstance();
 	auto& game = Game::getInstance();
 
-	float s = input.check(Input::Focus) ? m_focusSpeed : m_moveSpeed;
+	if (invincibility > 0.0f)
+		invincibility -= delta;
+
+	focus = input.check(Input::Focus);
+
 	int h = input.check(Input::Right) - input.check(Input::Left);
 	int v = input.check(Input::Down) - input.check(Input::Up);
+	if (h != 0 || v != 0)
+	{
+		speed = focus ? focusSpeed : moveSpeed;
+		direction = math::point_direction(0.0f, 0.0f, h, v);
+	}
+	else
+	{
+		speed = 0.0f;
+	}
 
-	m_xspeed = h * s * (v != 0 ? math::sin(45.0f) : 1.0f);
-	m_yspeed = v * s * (h != 0 ? math::sin(45.0f) : 1.0f);
-
-	if (m_fireTimer <= 0.0f)
+	if (fireTimer <= 0.0f)
 	{
 		if (input.check(Input::Fire))
 		{
-			game.engine->playerBullets.emplace_back(m_x, m_y, 8.0f, 90.0f, 5.0f);
-			m_fireTimer = m_fireTime;
+			//game.engine->playerBullets.emplace_back(x, y, 8.0f, 90.0f, 5.0f);
+			fireTimer = fireTime;
 		}
 	}
 	else
 	{
-		m_fireTimer -= delta;
+		fireTimer -= delta;
 	}
 
 	if (input.checkPressed(Input::Bomb))
-		if (m_bombs > 0)
+		if (bombs > 0)
 		{
 			game.engine->bullets.clear();
-			m_bombs--;
+			bombs--;
 		}
 }
 
-void Player::mDyingState(float delta)
+void Player::dyingState(float delta)
 {
 	auto& input = Input::getInstance();
 	auto& game = Game::getInstance();
 
-	if (m_deathbombTimer <= 0.0f)
+	if (deathbombTimer <= 0.0f)
 	{
-		if (m_lives > 0)
+		if (lives > 0)
 		{
-			m_lives--;
-			mSetAppearingState();
+			lives--;
+			setAppearingState();
 		}
 		else
 		{
-			die();
+			dead = true;
 			return;
 		}
 	}
 	else
 	{
-		m_deathbombTimer -= delta;
+		deathbombTimer -= delta;
 		if (input.checkPressed(Input::Bomb))
 		{
-			if (m_bombs > 0)
+			if (bombs > 0)
 			{
 				game.engine->bullets.clear();
-				m_bombs--;
-				mSetNormalState();
+				bombs--;
+				setNormalState();
 			}
 		}
 	}
 }
 
-void Player::mAppearingState(float delta)
+void Player::appearingState(float delta)
 {
-	m_appearTimer += delta;
-	m_x = math::lerp(m_appearX, m_startX, m_appearTimer / m_appearTime);
-	m_y = math::lerp(m_appearY, m_startY, m_appearTimer / m_appearTime);
-	if (m_appearTimer >= m_appearTime)
+	appearTimer += delta;
+	x = math::lerp(appearX, startX, appearTimer / appearTime);
+	y = math::lerp(appearY, startY, appearTimer / appearTime);
+	if (appearTimer >= appearTime)
 	{
-		m_x = m_startX;
-		m_y = m_startY;
-		mSetNormalState();
+		x = startX;
+		y = startY;
+		setNormalState();
 	}
 }
 
-void Player::mSetNormalState()
+void Player::setNormalState()
 {
-	m_state = &Player::mNormalState;
-	m_fireTimer = 0.0f;
+	state = &Player::normalState;
+	fireTimer = 0.0f;
 }
 
-void Player::mSetDyingState()
+void Player::setDyingState()
 {
-	m_state = &Player::mDyingState;
-	m_deathbombTimer = m_deathbombTime;
-	m_xspeed = 0.0f;
-	m_yspeed = 0.0f;
+	state = &Player::dyingState;
+	deathbombTimer = deathbombTime;
 }
 
-void Player::mSetAppearingState()
+void Player::setAppearingState()
 {
-	m_state = &Player::mAppearingState;
-	m_appearTimer = 0.0f;
-	m_x = m_appearX;
-	m_y = m_appearY;
+	state = &Player::appearingState;
+	appearTimer = 0.0f;
+	x = appearX;
+	y = appearY;
 }

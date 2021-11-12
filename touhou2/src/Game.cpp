@@ -67,8 +67,11 @@ void Game::mTick(float delta)
 		engine = nullptr;
 		engine = std::make_unique<STGEngine>();
 	}
-
-	//if (key_pressed<sf::Keyboard::F4>())
+	else if (key_pressed<sf::Keyboard::F3>())
+	{
+		engine->toggle_hitboxes();
+	}
+	//else if (key_pressed<sf::Keyboard::F4>())
 	//{
 	//	m_window.create(sf::VideoMode::getFullscreenModes()[0], "Touhou", sf::Style::None);
 	//	m_window.setVerticalSyncEnabled(true);
@@ -106,13 +109,17 @@ void Game::mTick(float delta)
 	{
 		Text t;
 		t.setPosition(0.0f, m_gameSurf.getSize().y);
-		t.setString("f1 - show this message\n"
-			"f2 - restart");
+		t.setString(
+			"f1 - show this message\n"
+			"f2 - restart\n"
+			"f3 - show hitboxes");
 		t.align(Text::HAlign::Left, Text::VAlign::Bottom);
 		m_gameSurf.draw(t);
 	}
 
 	m_gameSurf.display();
+
+	frame++;
 }
 
 void Game::mRender() const

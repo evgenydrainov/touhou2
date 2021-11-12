@@ -9,14 +9,6 @@
 #include <fmt/format.h>
 #include "Log.h"
 
-// TODO: get rid of this
-int cursor = 0;
-const char* menu[] =
-{
-	"Restart",
-	"Exit"
-};
-
 STGEngine::STGEngine()
 {
 	projectiles.loadFromFile("Sprites/Projectiles.png");
@@ -32,29 +24,29 @@ void STGEngine::update(float delta)
 {
 	sf::Clock c;
 
+	auto& input = Input::getInstance();
+
 	switch (m_state)
 	{
 	case State::Normal:
+		if (input.checkPressed(Input::Pause))
+		{
+			m_state = State::Paused;
+			m_pauseMenu = std::make_unique<PauseMenu>();
+			break;
+		}
+
 		mUpdateAll(delta);
-		mMoveAll(delta);
-		mCheckBoundsAll();
+		mPhysicsUpdateAll(delta);
+		mEndUpdateAll(delta);
+		break;
+
+	case State::Paused:
+		m_pauseMenu->update(delta);
 		break;
 
 	case State::GameOver:
-		auto& input = Input::getInstance();
-		cursor += input.checkPressed(Input::Down) - input.checkPressed(Input::Up);
-		cursor = math::modulo(cursor, 2);
-		if (input.checkPressed(Input::Confirm))
-			if (cursor == 0)
-			{
-				auto& game = Game::getInstance();
-				game.engine = nullptr;
-				game.engine = std::make_unique<STGEngine>();
-				return;
-			}
-			else if (cursor == 1)
-			{
-			}
+		m_gameOverMenu->update(delta);
 		break;
 	}
 
@@ -68,26 +60,15 @@ void STGEngine::draw(sf::RenderTarget& target, float delta) const
 	
 	m_playArea.clear();
 	mDrawAll(delta);
-	//debugDraw(delta);
+	
+	if (m_pauseMenu)
+		m_pauseMenu->draw(m_playArea, delta);
 
-	if (m_state == State::GameOver)
-	{
-		sf::RectangleShape r;
-		r.setSize({ playAreaW, playAreaH });
-		r.setFillColor({ 0, 0, 0, 128 });
-		m_playArea.draw(r);
-		for (int i = 0; i < 2; i++)
-		{
-			Text t;
-			t.setPosition(playAreaW / 2, playAreaH / 3 + 16 * i);
-			if (i == cursor)
-				t.setFillColor(sf::Color::Yellow);
+	if (m_gameOverMenu)
+		m_gameOverMenu->draw(m_playArea, delta);
 
-			t.setString(menu[i]);
-			t.align(Text::HAlign::Center, Text::VAlign::Top);
-			m_playArea.draw(t);
-		}
-	}
+	if (m_show_hitboxes)
+		mDebugDraw(delta);
 
 	m_playArea.display();
 
@@ -98,91 +79,96 @@ void STGEngine::draw(sf::RenderTarget& target, float delta) const
 	//Log("Draw: ", c.restart().asSeconds() * 60.0f);
 }
 
+void STGEngine::resume()
+{
+	m_pauseMenu = nullptr;
+	m_state = State::Normal;
+}
+
+void STGEngine::useContinue()
+{
+	m_gameOverMenu = nullptr;
+	m_state = State::Normal;
+	player = Player();
+	player.setAppearingState();
+}
+
 void STGEngine::mUpdateAll(float delta)
 {
 	m_script.update(delta);
 
 	player.update(delta);
-	if (player.isDead())
+	if (player.dead)
 	{
 		m_state = State::GameOver;
+		m_gameOverMenu = std::make_unique<GameOverMenu>();
 		return;
 	}
+
+	for (Bullet& b : bullets)
+		b.update(delta);
 
 	if (boss)
 	{
 		boss->update(delta);
-		if (boss->isDead())
+		if (boss->dead)
 			boss = nullptr;
 	}
+
+	for (Bullet& pb : playerBullets)
+		pb.update(delta);
 }
 
-void STGEngine::mMoveAll(float delta)
+void STGEngine::mPhysicsUpdateAll(float delta)
 {
+	// ideally, an object shouldn't care whether it's physics simulation is highp or lowp
+
 	constexpr size_t steps = 5;
 	constexpr float step = 1.0f / steps;
 
 	float physicsDelta = delta * step;
 	
+	// highp
 	for (size_t i = 0; i < steps; i++)
 	{
-		mMoveHighP(physicsDelta);
-		mCheckCollisionsHighP();
+		for (Bullet& b : bullets)
+			b.physicsUpdate(physicsDelta);
+
+		player.physicsUpdate(physicsDelta);
 	}
 
-	mMoveLowP(delta);
-	mCheckCollisionsLowP();
+	// lowp
+	for (Bullet& pb : playerBullets)
+		pb.physicsUpdate(delta);
+
+	if (boss)
+		boss->physicsUpdate(delta);
 }
 
-void STGEngine::mCheckBoundsAll()
+void STGEngine::mEndUpdateAll(float delta)
 {
-	player.checkBounds();
+	player.endUpdate(delta);
 	
 	for (auto b = bullets.begin(); b != bullets.end(); )
 	{
-		b->checkBounds();
-		if (b->isDead())
+		b->endUpdate(delta);
+		if (b->dead)
 			b = bullets.erase(b);
 		else
 			++b;
 	}
 
+	if (boss)
+		boss->endUpdate(delta);
+
 	for (auto pb = playerBullets.begin(); pb != playerBullets.end(); )
 	{
-		pb->checkBounds();
-		if (pb->isDead())
+		pb->endUpdate(delta);
+		if (pb->dead)
 			pb = playerBullets.erase(pb);
 		else
 			++pb;
 	}
-}
-
-void STGEngine::mMoveHighP(float physicsDelta)
-{
-	for (Bullet& b : bullets)
-		b.move(physicsDelta);
-
-	player.move(physicsDelta);
-}
-
-void STGEngine::mMoveLowP(float delta)
-{
-	for (Bullet& pb : playerBullets)
-		pb.move(delta);
-
-	if (boss)
-		boss->move(delta);
-}
-
-void STGEngine::mCheckCollisionsHighP()
-{
-	player.checkCollisions();
-}
-
-void STGEngine::mCheckCollisionsLowP()
-{
-	if (boss)
-		boss->checkCollisions();
 }
 
 void STGEngine::mDrawAll(float delta) const
@@ -195,7 +181,7 @@ void STGEngine::mDrawAll(float delta) const
 	mBatchBullets(delta);
 
 	for (const Bullet& pb : playerBullets)
-		draw::circle(m_playArea, pb.getX(), pb.getY(), pb.getRadius(), sf::Color::Green);
+		draw::circle(m_playArea, pb.x, pb.y, pb.radius, sf::Color::Green);
 }
 
 void STGEngine::mBatchBullets(float delta) const
@@ -203,7 +189,7 @@ void STGEngine::mBatchBullets(float delta) const
 	m_bulletsBuf.clear();
 	for (const Bullet& b : bullets)
 	{
-		sf::Vector2f p(b.getX(), b.getY());
+		sf::Vector2f p(b.x, b.y);
 		sf::Vector2f ox(8.0f, 0.0f);
 		sf::Vector2f oy(0.0f, 8.0f);
 
@@ -225,10 +211,16 @@ void STGEngine::mBatchBullets(float delta) const
 
 void STGEngine::mDebugDraw(float delta) const
 {
-	draw::circle(m_playArea, player.getX(), player.getY(), player.getRadius(), sf::Color::Green);
+	draw::circle(m_playArea, player.x, player.y, player.radius, sf::Color::Green);
+
+	if (boss)
+		draw::circle(m_playArea, boss->x, boss->y, boss->radius, sf::Color::Blue);
 
 	for (const Bullet& b : bullets)
-		draw::circle(m_playArea, b.getX(), b.getY(), b.getRadius(), sf::Color::Red);
+		draw::circle(m_playArea, b.x, b.y, b.radius, sf::Color::Red);
+
+	for (const Bullet& pb : playerBullets)
+		draw::circle(m_playArea, pb.x, pb.y, pb.radius, sf::Color::Green);
 }
 
 void STGEngine::mDrawBg(sf::RenderTarget& target, float delta) const
@@ -251,7 +243,7 @@ void STGEngine::mDrawHud(sf::RenderTarget& target, float delta) const
 	if (boss)
 	{
 		Text phasesLeft;
-		phasesLeft.setString(fmt::format("{}", boss->getPhasesAmount() - boss->getPhase() + 1));
+		phasesLeft.setString(fmt::format("{}", boss->getPhasesLeft()));
 		target.draw(phasesLeft, t);
 
 		if (boss->getMaxHp() != 0.0f)
@@ -266,7 +258,7 @@ void STGEngine::mDrawHud(sf::RenderTarget& target, float delta) const
 			back.setFillColor({ 100, 0, 0 });
 			target.draw(back, t);
 			sf::RectangleShape front;
-			front.setSize({ ww * boss->getHp() / boss->getMaxHp(), hh });
+			front.setSize({ ww * boss->hp / boss->getMaxHp(), hh });
 			front.setPosition(xx, yy);
 			front.setFillColor({ 255, 0, 0 });
 			target.draw(front, t);
@@ -274,14 +266,14 @@ void STGEngine::mDrawHud(sf::RenderTarget& target, float delta) const
 
 		Text timer;
 		timer.setPosition(playAreaW, 0.0f);
-		timer.setString(fmt::format("{}", std::ceil(boss->getTimer())));
+		timer.setString(fmt::format("{}", std::ceil(boss->timer)));
 		timer.align(Text::HAlign::Right, Text::VAlign::Top);
 		target.draw(timer, t);
 
 		Text name;
 		name.setPosition(0.0f, 16.0f);
 		name.setStyle(sf::Text::Italic);
-		name.setString(boss->getName());
+		name.setString(boss->name);
 		target.draw(name, t);
 
 		Text spellcardName;
@@ -290,16 +282,27 @@ void STGEngine::mDrawHud(sf::RenderTarget& target, float delta) const
 	t.translate(playAreaW + m_hudX, m_hudY);
 
 	// sidebar
-	sf::Sprite sidebar;
-	sidebar.setTexture(hud);
-	sidebar.setTextureRect({ 0, 0, 64, 144 });
+	//sf::Sprite sidebar;
+	//sidebar.setTexture(hud);
+	//sidebar.setTextureRect({ 0, 0, 64, 144 });
+	Text sidebar;
+	sidebar.setString(
+		"HiScore\n"
+		"Score\n"
+		"\n"
+		"Player\n"
+		"Bomb\n"
+		"\n"
+		"Power\n"
+		"Graze\n"
+		"Point");
 	target.draw(sidebar, t);
-	
+
 	std::string power;
-	if (player.getPower() >= player.getPowerMax())
+	if (player.power >= player.powerMax)
 		power = "MAX";
 	else
-		power = fmt::format("{}", player.getPower());
+		power = fmt::format("{}", player.power);
 
 	Text hud;
 	hud.setPosition(64.0f, 0.0f);
@@ -314,11 +317,11 @@ void STGEngine::mDrawHud(sf::RenderTarget& target, float delta) const
 		"{}\n"
 		"{}/{}\n",
 		0,
-		player.getScore(),
-		player.getLives(),
-		player.getBombs(),
+		player.score,
+		player.lives,
+		player.bombs,
 		power,
-		player.getGraze(),
-		player.getPoint(), player.getPointNext()));
+		player.graze,
+		player.point, 50));
 	target.draw(hud, t);
 }

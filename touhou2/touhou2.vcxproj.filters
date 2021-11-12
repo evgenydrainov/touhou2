@@ -8,9 +8,6 @@
     <ClCompile Include="src\Bullet.cpp">
       <Filter>touhou\stgengine\objects</Filter>
     </ClCompile>
-    <ClCompile Include="src\GameObject.cpp">
-      <Filter>touhou\stgengine\objects</Filter>
-    </ClCompile>
     <ClCompile Include="src\Player.cpp">
       <Filter>touhou\stgengine\objects</Filter>
     </ClCompile>
@@ -32,15 +29,21 @@
     <ClCompile Include="src\Game.cpp">
       <Filter>touhou\global</Filter>
     </ClCompile>
+    <ClCompile Include="src\PauseMenu.cpp">
+      <Filter>touhou\stgengine</Filter>
+    </ClCompile>
+    <ClCompile Include="src\GameOverMenu.cpp">
+      <Filter>touhou\stgengine</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Pickup.cpp">
+      <Filter>touhou\stgengine\objects</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Boss.h">
       <Filter>touhou\stgengine\objects</Filter>
     </ClInclude>
     <ClInclude Include="src\Bullet.h">
-      <Filter>touhou\stgengine\objects</Filter>
-    </ClInclude>
-    <ClInclude Include="src\GameObject.h">
       <Filter>touhou\stgengine\objects</Filter>
     </ClInclude>
     <ClInclude Include="src\Player.h">
@@ -81,6 +84,15 @@
     </ClInclude>
     <ClInclude Include="src\Game.h">
       <Filter>touhou\global</Filter>
+    </ClInclude>
+    <ClInclude Include="src\PauseMenu.h">
+      <Filter>touhou\stgengine</Filter>
+    </ClInclude>
+    <ClInclude Include="src\GameOverMenu.h">
+      <Filter>touhou\stgengine</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Pickup.h">
+      <Filter>touhou\stgengine\objects</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

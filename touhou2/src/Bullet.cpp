@@ -3,20 +3,37 @@
 #include "STGEngine.h"
 
 #include "mymath.h"
+#include "Log.h"
 
-Bullet::Bullet(float x, float y, float speed, float direction, float radius)
+using namespace luabridge;
+
+Bullet::Bullet(float x, float y, float speed, float direction, float radius) :
+	x(x),
+	y(y),
+	speed(speed),
+	direction(direction),
+	radius(radius)
 {
-	m_x = x;
-	m_y = y;
-	m_radius = radius;
-	setVelocity(speed, direction);
 }
 
-void Bullet::checkBounds()
+void Bullet::update(float delta)
 {
-	if (m_x < 0.0f || m_y < 0.0f || m_x >= STGEngine::playAreaW || m_y >= STGEngine::playAreaH)
+	speed += acc * delta;
+	speed = std::max(speed, speedMin);
+}
+
+void Bullet::physicsUpdate(float delta)
+{
+	x += speed * math::dcos(direction) * delta;
+	y += speed * -math::dsin(direction) * delta;
+}
+
+void Bullet::endUpdate(float delta)
+{
+	if (x < 0.0f || y < 0.0f || x >= STGEngine::playAreaW || y >= STGEngine::playAreaH)
 	{
-		die();
+		dead = true;
+		//co = Nil();
 		return;
 	}
 }

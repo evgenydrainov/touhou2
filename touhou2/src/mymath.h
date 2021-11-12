@@ -35,8 +35,8 @@ namespace math
 	//constexpr float sin(float degrees) { return sine_table[modulo((int)degrees, 360)]; }
 	//constexpr float cos(float degrees) { return sine_table[modulo((int)degrees + 90, 360)]; }
 
-	inline float sin(float degrees) { return std::sin(deg2rad(degrees)); }
-	inline float cos(float degrees) { return std::cos(deg2rad(degrees)); }
+	inline float dsin(float degrees) { return std::sin(deg2rad(degrees)); }
+	inline float dcos(float degrees) { return std::cos(deg2rad(degrees)); }
 
 	inline float point_direction(float x1, float y1, float x2, float y2) { return rad2deg(std::atan2(y1 - y2, x2 - x1)); }
 	inline float point_distance(float x1, float y1, float x2, float y2) { return std::sqrt(sqr(x2 - x1) + sqr(y2 - y1)); }
