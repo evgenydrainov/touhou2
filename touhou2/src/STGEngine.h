@@ -46,7 +46,7 @@ private:
 	Script m_script;
 
 public:
-	Player player;
+	Player player{ m_script.getL() };
 	std::unique_ptr<Boss> boss;
 	std::vector<Bullet> bullets;
 	std::vector<Bullet> playerBullets;

@@ -2,6 +2,7 @@
 
 #include "Input.h"
 
+#include "mymath.h"
 #include "Text.h"
 #include "key_pressed.h"
 #include <fmt/format.h>
@@ -9,7 +10,12 @@
 
 void Game::run()
 {
-	m_window.create(sf::VideoMode(gameW, gameH), "Touhou");
+	auto m = sf::VideoMode::getDesktopMode();
+	int xscale = m.width / gameW;
+	int yscale = m.height / gameH;
+	int scale = std::max(std::min(xscale, yscale), 1);
+
+	m_window.create(sf::VideoMode(gameW * scale, gameH * scale), "Touhou");
 	m_window.setVerticalSyncEnabled(true);
 	m_gameSurf.create(gameW, gameH);
 	simsun.loadFromFile("Fonts/simsunb.ttf");

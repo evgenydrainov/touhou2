@@ -89,7 +89,8 @@ void STGEngine::useContinue()
 {
 	m_gameOverMenu = nullptr;
 	m_state = State::Normal;
-	player = Player();
+	// this is a mess... maybe make script also global?
+	player = Player(m_script.getL());
 	player.setAppearingState();
 }
 

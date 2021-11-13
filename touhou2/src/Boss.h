@@ -20,7 +20,7 @@ public:
 
 public:
 	// standard methods
-	Boss(luabridge::LuaRef bossData);
+	Boss(luabridge::LuaRef bossData, lua_State* L);
 
 	void update(float delta);
 	void physicsUpdate(float delta);
@@ -57,7 +57,7 @@ public:
 
 	luabridge::LuaRef co;
 	float co_timer = 0.0f;
-	bool co_finished = false;
+	bool co_running = false;
 
 public:
 	// other

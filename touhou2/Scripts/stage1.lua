@@ -1,7 +1,7 @@
 local YoumuNonspell1 = {
 	Hp = 100,
 	Time = 60,
-	Script = function(self)
+	Script = function()
 		local shoot = function(x, y, dir)
 			local N = 8
 			local i
@@ -41,8 +41,8 @@ local YoumuNonspell1 = {
 local GhostSword = {
 	Hp = 100,
 	Time = 50,
-	Script = function(self)
-		local bullet = function(self)
+	Script = function()
+		local bullet = function()
 			local targdir = self.direction + 360
 			while self.direction~=targdir do
 				self.direction = approach(self.direction, targdir, 5)
@@ -53,8 +53,7 @@ local GhostSword = {
 			local N = 10
 			local i
 			for i = 0,N-1 do
-				--CreateBulletB(x, y, 1, dir + 360*i/N, -2, _bullet)
-				CreateBullet(x, y, 1, dir + 360*i/N, -2)
+				CreateBulletB(x, y, 1, dir + 360*i/N, -2, bullet)
 			end
 		end
 		local slash = function(xstart, xend)

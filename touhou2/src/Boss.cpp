@@ -8,8 +8,8 @@
 
 using namespace luabridge;
 
-Boss::Boss(LuaRef bossData) :
-	co(bossData.state())
+Boss::Boss(LuaRef bossData, lua_State* L) :
+	co(L)
 {
 	x = STGEngine::playAreaW / 2;
 	y = STGEngine::playAreaH / 4;
@@ -36,18 +36,22 @@ void Boss::update(float delta)
 	if (timer <= 0.0f)
 		endPhase();
 
-	co_timer += delta;
-	while (co_timer > 0.0f)
+	if (co_running)
 	{
-		if (!co_finished)
-			if (!co.isNil())
+		co_timer += delta;
+		while (co_timer > 0.0f)
+		{
+			setGlobal(co.state(), this, "self");
+			co_running = getGlobal(co.state(), "coroutine")["resume"](co);
+			
+			if (!co_running)
 			{
-				LuaRef r = getGlobal(co.state(), "coroutine")["resume"](co, this);
-				if (!r.cast<bool>())
-					co_finished = true;
+				co_timer = 0.0f;
+				break;
 			}
 
-		co_timer--;
+			co_timer--;
+		}
 	}
 
 	speed += acc * delta;
@@ -120,6 +124,7 @@ void Boss::startPhase()
 		hp = phases[phaseInd].hp;
 		timer = phases[phaseInd].time;
 		co = getGlobal(co.state(), "coroutine")["create"](phases[phaseInd].script);
+		co_running = true;
 	}
 }
 

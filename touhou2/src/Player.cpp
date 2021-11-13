@@ -8,7 +8,8 @@
 
 using namespace luabridge;
 
-Player::Player()
+Player::Player(lua_State* L) :
+	L(L)
 {
 	radius = 2.0f;
 	x = startX;
@@ -118,7 +119,7 @@ void Player::normalState(float delta)
 	{
 		if (input.check(Input::Fire))
 		{
-			//game.engine->playerBullets.emplace_back(x, y, 8.0f, 90.0f, 5.0f);
+			game.engine->playerBullets.emplace_back(x, y, 8.0f, 90.0f, 5.0f, L);
 			fireTimer = fireTime;
 		}
 	}

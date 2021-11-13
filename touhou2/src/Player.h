@@ -24,7 +24,7 @@ public:
 
 public:
 	// standard methods
-	Player();
+	Player(lua_State* L);
 
 	void update(float delta);
 	void physicsUpdate(float delta);
@@ -59,6 +59,8 @@ public:
 	float fireTimer = 0.0f;
 	float deathbombTimer = 0.0f;
 	float appearTimer = 0.0f;
+
+	lua_State* L = nullptr;
 
 public:
 	// states

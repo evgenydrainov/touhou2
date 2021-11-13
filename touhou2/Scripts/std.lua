@@ -1,15 +1,12 @@
---Width 			= 384
---Height 			= 448
-
-function round(x)
-	return x + (2^52 + 2^51) - (2^52 + 2^51)
-end
-
 function Wait(t)
 	while t > 0 do
 		t = t - 1
 		coroutine.yield()
 	end
+end
+
+function round(x)
+	return x + (2^52 + 2^51) - (2^52 + 2^51)
 end
 
 function dsin(x) return math.sin(math.rad(x)) end
@@ -37,12 +34,6 @@ function floor_to(x, n) return math.floor(x/n) * n end
 function round_to(x, n) return round(x/n) * n end
 
 function ceil_to(x, n) return math.ceil(x/n) * n end
-
---function launch_towards(inst, target_x, target_y, acc)
---	inst.speed = math.sqrt(point_distance(inst.x, inst.y, target_x, target_y) * math.abs(acc) * 2)
---	inst.direction = point_direction(inst.x, inst.y, target_x, target_y)
---	inst.acc = acc
---end
 
 function slide_to(inst, target_x, target_y, t)
 	while math.abs(target_x-inst.x)>.1 and math.abs(target_y-inst.y)>.1 do

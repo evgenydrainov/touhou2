@@ -7,22 +7,22 @@
 
 using namespace luabridge;
 
-void CreateBullet(float x, float y, float speed, float direction, float radius)
+void CreateBullet(float x, float y, float speed, float direction, float radius, lua_State* L)
 {
 	auto& game = Game::getInstance();
-	game.engine->bullets.emplace_back(x, y, speed, direction, radius);
+	game.engine->bullets.emplace_back(x, y, speed, direction, radius, L);
 }
 
-void CreateBulletB(float x, float y, float speed, float direction, float radius, LuaRef script)
+void CreateBulletB(float x, float y, float speed, float direction, float radius, LuaRef script, lua_State* L)
 {
 	auto& game = Game::getInstance();
-	
+	game.engine->bullets.emplace_back(x, y, speed, direction, radius, script, L);
 }
 
-void CreateBoss(LuaRef bossData)
+void CreateBoss(LuaRef bossData, lua_State* L)
 {
 	auto& game = Game::getInstance();
-	game.engine->boss = std::make_unique<Boss>(bossData);
+	game.engine->boss = std::make_unique<Boss>(bossData, L);
 }
 
 //void DoFile(const std::string& fname, lua_State* L)
@@ -32,9 +32,7 @@ void CreateBoss(LuaRef bossData)
 //		Log(lua_tostring(L, -1));
 //}
 
-Script::Script() :
-	m_L(luaL_newstate(), lua_close),
-	m_co(m_L.get())
+Script::Script()
 {
 	luaL_requiref(m_L.get(), "_G", luaopen_base, 1);
 	luaL_requiref(m_L.get(), LUA_COLIBNAME, luaopen_coroutine, 1);
@@ -53,6 +51,7 @@ void Script::load(const std::string& fname)
 	{
 		LuaRef stage = getGlobal(m_L.get(), "Stage");
 		m_co = getGlobal(m_L.get(), "coroutine")["create"](stage["Script"]);
+		m_running = true;
 	}
 	else
 	{
@@ -65,18 +64,21 @@ void Script::update(float delta)
 	auto& game = Game::getInstance();
 	setGlobal(m_L.get(), &game.engine->player, "Player");
 
-	m_timer += delta;
-	while (m_timer > 0.0f)
+	if (m_running)
 	{
-		if (!m_finished)
-			if (!m_co.isNil())
+		m_timer += delta;
+		while (m_timer > 0.0f)
+		{
+			m_running = getGlobal(m_L.get(), "coroutine")["resume"](m_co);
+
+			if (!m_running)
 			{
-				LuaRef r = getGlobal(m_L.get(), "coroutine")["resume"](m_co);
-				if (!r.cast<bool>())
-					m_finished = true;
+				m_timer = 0.0f;
+				break;
 			}
 
-		m_timer--;
+			m_timer--;
+		}
 	}
 }
 
@@ -86,11 +88,10 @@ void Script::mRegister()
 		.addFunction("CreateBullet", CreateBullet)
 		.addFunction("CreateBulletB", CreateBulletB)
 		.addFunction("CreateBoss", CreateBoss);
-		//.addFunction("DoFile", DoFile);
 
 	Player::luaRegister(getGlobalNamespace(m_L.get()));
 
-	//Bullet::luaRegister(getGlobalNamespace(m_L.get()));
+	Bullet::luaRegister(getGlobalNamespace(m_L.get()));
 
 	Boss::luaRegister(getGlobalNamespace(m_L.get()));
 }
