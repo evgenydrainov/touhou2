@@ -8,8 +8,7 @@
 
 using namespace luabridge;
 
-Player::Player(lua_State* L) :
-	L(L)
+Player::Player()
 {
 	radius = 2.0f;
 	x = startX;
@@ -21,23 +20,26 @@ void Player::update(float delta)
 {
 	if (state)
 		(this->*state)(delta);
+
+	t += delta;
+	a = math::approach(a, focus ? 1.0f : 0.0f, 0.1f);
 }
 
 void Player::physicsUpdate(float physicsDelta)
 {
+	x += speed * math::dcos(direction) * physicsDelta;
+	y += speed * -math::dsin(direction) * physicsDelta;
+
 	if (state == &Player::normalState)
 	{
-		x += speed * math::dcos(direction) * physicsDelta;
-		y += speed * -math::dsin(direction) * physicsDelta;
-
 		if (invincibility <= 0.0f)
 		{
 			auto& game = Game::getInstance();
-			for (auto b = game.engine->bullets.begin(); b != game.engine->bullets.end(); )
+			for (auto b = game.stage->bullets.begin(); b != game.stage->bullets.end(); )
 				if (col::circle_vs_circle(x, y, radius, b->x, b->y, b->radius))
 				{
 					getHit();
-					b = game.engine->bullets.erase(b);
+					b = game.stage->bullets.erase(b);
 					// don't get hit multiple times in 1 frame
 					break;
 				}
@@ -53,8 +55,8 @@ void Player::endUpdate(float delta)
 {
 	if (state != &Player::appearingState)
 	{
-		y = std::clamp(y, 0.0f, (float)STGEngine::playAreaH);
-		x = std::clamp(x, 0.0f, (float)STGEngine::playAreaW);
+		y = std::clamp(y, 0.0f, (float)Stage::playAreaH);
+		x = std::clamp(x, 0.0f, (float)Stage::playAreaW);
 	}
 
 	// animation goes here
@@ -62,23 +64,42 @@ void Player::endUpdate(float delta)
 
 void Player::draw(sf::RenderTexture& target, float delta) const
 {
+	//sf::RectangleShape r;
+	//r.setPosition(x, y);
+	//r.setSize({ 24.0f, 48.0f });
+	//r.setOrigin(12.0f, 24.0f);
+	//
+	//if (invincibility > 0.0f)
+	//	r.setFillColor({ 128, 128, 128 });
+	//
+	//target.draw(r);
 	auto& game = Game::getInstance();
-
+	sf::Sprite s;
+	s.setTexture(game.stage->characters);
+	s.setTextureRect({ 32 * (static_cast<int>(t * 0.1f) % 4), 0, 32, 48});
+	s.setPosition(x, y);
+	s.setOrigin(16, 24);
 	if (invincibility > 0.0f)
-		if (game.frame % 2 == 0)
-			return;
-
-	sf::RectangleShape r;
-	r.setPosition(x, y);
-	r.setSize({ 24.0f, 48.0f });
-	r.setOrigin(12.0f, 24.0f);
-	target.draw(r);
+		s.setColor({ 255, 255, 255, 128 });
+	target.draw(s);
+	if (a > 0.0f)
+	{
+		sf::Sprite s;
+		s.setTexture(game.stage->characters);
+		s.setTextureRect({ 224, 0, 64, 64 });
+		s.setPosition(x, y);
+		s.setOrigin(32, 32);
+		s.setRotation(-t);
+		s.setColor({ 255, 255, 255, static_cast<sf::Uint8>(255.0f * a) });
+		target.draw(s);
+	}
 }
 
 void Player::getHit()
 {
 	setDyingState();
-	invincibility = 120.0f;
+	invincibility = 120.0f; // NOTE: Stage::useContinue
+	speed = 0.0f;
 }
 
 void Player::luaRegister(Namespace nameSpace)
@@ -119,7 +140,12 @@ void Player::normalState(float delta)
 	{
 		if (input.check(Input::Fire))
 		{
-			game.engine->playerBullets.emplace_back(x, y, 8.0f, 90.0f, 5.0f, L);
+			Bullet& b = game.stage->playerBullets.emplace_back();
+			b.x = x;
+			b.y = y;
+			b.speed = 8.0f;
+			b.direction = 90.0f;
+			b.radius = 5.0f;
 			fireTimer = fireTime;
 		}
 	}
@@ -131,7 +157,7 @@ void Player::normalState(float delta)
 	if (input.checkPressed(Input::Bomb))
 		if (bombs > 0)
 		{
-			game.engine->bullets.clear();
+			game.stage->bullets.clear();
 			bombs--;
 		}
 }
@@ -161,7 +187,7 @@ void Player::dyingState(float delta)
 		{
 			if (bombs > 0)
 			{
-				game.engine->bullets.clear();
+				game.stage->bullets.clear();
 				bombs--;
 				setNormalState();
 			}

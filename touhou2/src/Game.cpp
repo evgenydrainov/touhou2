@@ -7,56 +7,166 @@
 #include "key_pressed.h"
 #include <fmt/format.h>
 #include "Log.h"
+#include <inipp/inipp.h>
+#include <fstream>
 
 void Game::run()
 {
-	auto m = sf::VideoMode::getDesktopMode();
-	int xscale = m.width / gameW;
-	int yscale = m.height / gameH;
-	int scale = std::max(std::min(xscale, yscale), 1);
-
-	m_window.create(sf::VideoMode(gameW * scale, gameH * scale), "Touhou");
-	m_window.setVerticalSyncEnabled(true);
+	loadOptions();
 	m_gameSurf.create(gameW, gameH);
 	simsun.loadFromFile("Fonts/simsunb.ttf");
+	startStage();
 
-	m_state = State::Gameplay;
-	engine = std::make_unique<STGEngine>();
-
-	sf::Clock c;
+	sf::Clock sf_clock;
 	while (m_window.isOpen())
 	{
-		m_skipFrame = false;
+		sf::Event e;
+		while (m_window.pollEvent(e))
+			if (e.type == sf::Event::Closed)
+				m_window.close();
 
-		mHandleEvents();
+		float delta = std::clamp(sf_clock.restart().asSeconds(), std::numeric_limits<float>::min(), 1.0f / 30.0f) * 60.0f;
 
-		if (!m_window.hasFocus())
-			m_skipFrame = true;
-
-		sf::Time t = c.restart();
-		float delta = t.asSeconds() * 60.0f;
-
-		if (!m_skipFrame)
+		if (m_window.hasFocus())
 			mTick(delta);
 
 		mRender();
 	}
 }
 
-void Game::mHandleEvents()
+void Game::goToTitleScren()
 {
-	sf::Event e;
-	while (m_window.pollEvent(e))
-		switch (e.type)
-		{
-		case sf::Event::Closed:
-			m_window.close();
-			break;
+	if (stage)
+	{
+		delete stage;
+		stage = nullptr;
+	}
 
-		case sf::Event::PosChanging:
-			m_skipFrame = true;
-			break;
-		}
+	//if (title)
+	//{
+	//	delete title;
+	//	title = nullptr;
+	//}
+
+	m_state = State::Title;
+	//title = new TitleScreen;
+}
+
+void Game::startStage()
+{
+	if (stage)
+	{
+		delete stage;
+		stage = nullptr;
+	}
+
+	//if (title)
+	//{
+	//	delete title;
+	//	title = nullptr;
+	//}
+
+	m_state = State::Gameplay;
+	stage = new Stage;
+}
+
+void Game::restartStage()
+{
+	startStage();
+}
+
+void Game::quitFromStage()
+{
+	m_window.close();
+}
+
+void Game::loadOptions()
+{
+	std::ifstream file("options.ini");
+	inipp::Ini<char> ini;
+	ini.parse(file);
+
+	bool recreateFile = false;
+
+	if (ini.sections["Video"]["Fullscreen"] == "Disabled")
+		setFullscreen(Fullscreen::Disabled);
+	else if (ini.sections["Video"]["Fullscreen"] == "Enabled")
+		setFullscreen(Fullscreen::Enabled);
+	else if (ini.sections["Video"]["Fullscreen"] == "Borderless")
+		setFullscreen(Fullscreen::Borderless);
+	else
+	{
+		setFullscreen(Fullscreen::Borderless);
+		recreateFile = true;
+	}
+
+	if (ini.sections["Video"]["VSync"] == "Disabled")
+		setVSync(false);
+	else if (ini.sections["Video"]["VSync"] == "Enabled")
+		setVSync(true);
+	else
+	{
+		setVSync(true);
+		recreateFile = true;
+	}
+
+	if (recreateFile)
+		saveOptions();
+}
+
+void Game::saveOptions()
+{
+	inipp::Ini<char> ini;
+
+	switch (m_fullscreen)
+	{
+	default:
+	case Fullscreen::Disabled:
+		ini.sections["Video"]["Fullscreen"] = "Disabled";
+		break;
+
+	case Fullscreen::Enabled:
+		ini.sections["Video"]["Fullscreen"] = "Enabled";
+		break;
+
+	case Fullscreen::Borderless:
+		ini.sections["Video"]["Fullscreen"] = "Borderless";
+		break;
+	}
+
+	ini.sections["Video"]["VSync"] = m_vSync ? "Enabled" : "Disabled";
+
+	std::ofstream file("options.ini");
+	ini.generate(file);
+}
+
+void Game::setFullscreen(Fullscreen fullscreen)
+{
+	m_fullscreen = fullscreen;
+
+	switch (m_fullscreen)
+	{
+	default:
+	case Fullscreen::Disabled:
+		m_window.create(sf::VideoMode(gameW, gameH), "Touhou");
+		break;
+
+	case Fullscreen::Enabled:
+		m_window.create(sf::VideoMode::getFullscreenModes()[0], "Touhou", sf::Style::Fullscreen);
+		break;
+
+	case Fullscreen::Borderless:
+		m_window.create(sf::VideoMode::getFullscreenModes()[0], "Touhou", sf::Style::None);
+		break;
+	}
+
+	setVSync(m_vSync);
+}
+
+void Game::setVSync(bool enabled)
+{
+	m_vSync = enabled;
+	m_window.setVerticalSyncEnabled(m_vSync);
 }
 
 void Game::mTick(float delta)
@@ -66,39 +176,53 @@ void Game::mTick(float delta)
 	input.update();
 
 	// debug
+	show_hitboxes ^= key_pressed<sf::Keyboard::F3>();
 	if (key_pressed<sf::Keyboard::F2>())
 	{
-		// restart
-		m_state = State::Gameplay;
-		engine = nullptr;
-		engine = std::make_unique<STGEngine>();
+		startStage();
 	}
-	else if (key_pressed<sf::Keyboard::F3>())
+	else if (key_pressed<sf::Keyboard::F8>())
 	{
-		engine->toggle_hitboxes();
+		stage->boss->endPhase();
 	}
-	//else if (key_pressed<sf::Keyboard::F4>())
-	//{
-	//	m_window.create(sf::VideoMode::getFullscreenModes()[0], "Touhou", sf::Style::None);
-	//	m_window.setVerticalSyncEnabled(true);
-	//}
+	else if (key_pressed<sf::Keyboard::F9>())
+	{
+		setVSync(!getVSync());
+		saveOptions();
+	}
 
-	mUpdate(delta);
+	switch (m_state)
+	{
+	case State::Title:
+		//title-update(delta);
+		break;
+
+	case State::Gameplay:
+		stage->update(delta);
+		break;
+	}
 
 	m_gameSurf.clear();
 
-	mDraw(m_gameSurf, delta);
+	switch (m_state)
+	{
+	case State::Title:
+		//title->draw(delta);
+		break;
+
+	case State::Gameplay:
+		stage->draw(m_gameSurf, delta);
+		break;
+	}
 
 	m_displayFpsCount += 60.0f / delta;
 	m_displayFpsCountN += 1.0f;
-	m_displayFpsTimer -= delta;
 
-	if (m_displayFpsTimer <= 0.0f)
+	if (m_displayFpsCountN >= 60.0f)
 	{
 		m_displayFps = m_displayFpsCount / m_displayFpsCountN;
 		m_displayFpsCount = 0.0f;
 		m_displayFpsCountN = 0.0f;
-		m_displayFpsTimer = 60.0f;
 	}
 
 	Text t;
@@ -109,23 +233,7 @@ void Game::mTick(float delta)
 	t.align(Text::HAlign::Right, Text::VAlign::Bottom);
 	m_gameSurf.draw(t);
 
-	static bool show_msg = false;
-	show_msg ^= key_pressed<sf::Keyboard::F1>();
-	if (show_msg)
-	{
-		Text t;
-		t.setPosition(0.0f, m_gameSurf.getSize().y);
-		t.setString(
-			"f1 - show this message\n"
-			"f2 - restart\n"
-			"f3 - show hitboxes");
-		t.align(Text::HAlign::Left, Text::VAlign::Bottom);
-		m_gameSurf.draw(t);
-	}
-
 	m_gameSurf.display();
-
-	frame++;
 }
 
 void Game::mRender() const
@@ -145,24 +253,4 @@ void Game::mRender() const
 	m_window.draw(gameSurf);
 
 	m_window.display();
-}
-
-void Game::mUpdate(float delta)
-{
-	switch (m_state)
-	{
-	case State::Gameplay:
-		engine->update(delta);
-		break;
-	}
-}
-
-void Game::mDraw(sf::RenderTarget& target, float delta) const
-{
-	switch (m_state)
-	{
-	case State::Gameplay:
-		engine->draw(target, delta);
-		break;
-	}
 }

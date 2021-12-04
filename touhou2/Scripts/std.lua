@@ -5,9 +5,17 @@ function Wait(t)
 	end
 end
 
-function round(x)
-	return x + (2^52 + 2^51) - (2^52 + 2^51)
-end
+--function round(x)
+--	return x + (2^52 + 2^51) - (2^52 + 2^51)
+--end
+
+--function round(x)
+--	if x>=0 then
+--		return math.floor(x + .5)
+--	else
+--		return math.ceil(x - .5)
+--	end
+--end
 
 function dsin(x) return math.sin(math.rad(x)) end
 
@@ -31,14 +39,6 @@ function lerp(a, b, t) return a + (b-a)*t end
 
 function floor_to(x, n) return math.floor(x/n) * n end
 
-function round_to(x, n) return round(x/n) * n end
+--function round_to(x, n) return round(x/n) * n end
 
 function ceil_to(x, n) return math.ceil(x/n) * n end
-
-function slide_to(inst, target_x, target_y, t)
-	while math.abs(target_x-inst.x)>.1 and math.abs(target_y-inst.y)>.1 do
-		inst.x = lerp(inst.x, target_x, t)
-		inst.y = lerp(inst.y, target_y, t)
-		Wait(1)
-	end
-end

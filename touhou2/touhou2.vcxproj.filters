@@ -3,13 +3,13 @@
   <ItemGroup>
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\Boss.cpp">
-      <Filter>touhou\stgengine\objects</Filter>
+      <Filter>touhou\stage\objects</Filter>
     </ClCompile>
     <ClCompile Include="src\Bullet.cpp">
-      <Filter>touhou\stgengine\objects</Filter>
+      <Filter>touhou\stage\objects</Filter>
     </ClCompile>
     <ClCompile Include="src\Player.cpp">
-      <Filter>touhou\stgengine\objects</Filter>
+      <Filter>touhou\stage\objects</Filter>
     </ClCompile>
     <ClCompile Include="src\fmt\format.cc">
       <Filter>lib\fmt</Filter>
@@ -20,34 +20,38 @@
     <ClCompile Include="src\Input.cpp">
       <Filter>touhou\global</Filter>
     </ClCompile>
-    <ClCompile Include="src\STGEngine.cpp">
-      <Filter>touhou\stgengine</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Script.cpp">
-      <Filter>touhou\stgengine</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Game.cpp">
-      <Filter>touhou\global</Filter>
-    </ClCompile>
-    <ClCompile Include="src\PauseMenu.cpp">
-      <Filter>touhou\stgengine</Filter>
-    </ClCompile>
-    <ClCompile Include="src\GameOverMenu.cpp">
-      <Filter>touhou\stgengine</Filter>
+    <ClCompile Include="src\Stage.cpp">
+      <Filter>touhou\stage</Filter>
     </ClCompile>
     <ClCompile Include="src\Pickup.cpp">
-      <Filter>touhou\stgengine\objects</Filter>
+      <Filter>touhou\stage\objects</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Script.cpp">
+      <Filter>touhou\stage\stuff</Filter>
+    </ClCompile>
+    <ClCompile Include="src\GameOverMenu.cpp">
+      <Filter>touhou\stage\menus</Filter>
+    </ClCompile>
+    <ClCompile Include="src\PauseMenu.cpp">
+      <Filter>touhou\stage\menus</Filter>
+    </ClCompile>
+    <ClCompile Include="src\stdafx.cpp" />
+    <ClCompile Include="src\PauseOptionsMenu.cpp">
+      <Filter>touhou\stage\menus</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Game.cpp">
+      <Filter>touhou\global\game</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Boss.h">
-      <Filter>touhou\stgengine\objects</Filter>
+      <Filter>touhou\stage\objects</Filter>
     </ClInclude>
     <ClInclude Include="src\Bullet.h">
-      <Filter>touhou\stgengine\objects</Filter>
+      <Filter>touhou\stage\objects</Filter>
     </ClInclude>
     <ClInclude Include="src\Player.h">
-      <Filter>touhou\stgengine\objects</Filter>
+      <Filter>touhou\stage\objects</Filter>
     </ClInclude>
     <ClInclude Include="src\Text.h">
       <Filter>stuff</Filter>
@@ -73,26 +77,30 @@
     <ClInclude Include="src\Log.h">
       <Filter>stuff</Filter>
     </ClInclude>
-    <ClInclude Include="src\STGEngine.h">
-      <Filter>touhou\stgengine</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Script.h">
-      <Filter>touhou\stgengine</Filter>
+    <ClInclude Include="src\Stage.h">
+      <Filter>touhou\stage</Filter>
     </ClInclude>
     <ClInclude Include="src\key_pressed.h">
       <Filter>stuff</Filter>
     </ClInclude>
-    <ClInclude Include="src\Game.h">
-      <Filter>touhou\global</Filter>
+    <ClInclude Include="src\Pickup.h">
+      <Filter>touhou\stage\objects</Filter>
     </ClInclude>
-    <ClInclude Include="src\PauseMenu.h">
-      <Filter>touhou\stgengine</Filter>
+    <ClInclude Include="src\Script.h">
+      <Filter>touhou\stage\stuff</Filter>
     </ClInclude>
     <ClInclude Include="src\GameOverMenu.h">
-      <Filter>touhou\stgengine</Filter>
+      <Filter>touhou\stage\menus</Filter>
     </ClInclude>
-    <ClInclude Include="src\Pickup.h">
-      <Filter>touhou\stgengine\objects</Filter>
+    <ClInclude Include="src\PauseMenu.h">
+      <Filter>touhou\stage\menus</Filter>
+    </ClInclude>
+    <ClInclude Include="src\stdafx.h" />
+    <ClInclude Include="src\PauseOptionsMenu.h">
+      <Filter>touhou\stage\menus</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Game.h">
+      <Filter>touhou\global\game</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -111,11 +119,23 @@
     <Filter Include="touhou\global">
       <UniqueIdentifier>{9df12d45-d5a5-4613-9a65-090fa23d75e2}</UniqueIdentifier>
     </Filter>
-    <Filter Include="touhou\stgengine">
+    <Filter Include="touhou\title">
+      <UniqueIdentifier>{5ee020f8-8c88-4673-8f83-c7c6f9c13501}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="touhou\stage">
       <UniqueIdentifier>{406d6d8e-b14a-4370-8d89-ab2de3021d10}</UniqueIdentifier>
     </Filter>
-    <Filter Include="touhou\stgengine\objects">
+    <Filter Include="touhou\stage\objects">
       <UniqueIdentifier>{b18dffc4-3dce-4bf2-bcaa-34dd26f78c4c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="touhou\stage\stuff">
+      <UniqueIdentifier>{a25dbf14-295c-4417-badc-845efeccb6a7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="touhou\stage\menus">
+      <UniqueIdentifier>{f1f08812-3395-4b3c-b7fa-b671c9b7f32f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="touhou\global\game">
+      <UniqueIdentifier>{4d9a38df-c4ae-4467-a231-fc0d2d629c10}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

@@ -8,11 +8,12 @@
 
 using namespace luabridge;
 
-Boss::Boss(LuaRef bossData, lua_State* L) :
-	co(L)
+Boss::Boss(LuaRef bossData) :
+	//co(bossData.state())
+	L(bossData.state())
 {
-	x = STGEngine::playAreaW / 2;
-	y = STGEngine::playAreaH / 4;
+	x = Stage::playAreaW / 2;
+	y = Stage::playAreaH / 4;
 
 	name = bossData["Name"].cast<std::string>();
 	
@@ -28,6 +29,8 @@ Boss::Boss(LuaRef bossData, lua_State* L) :
 
 	phaseInd = 0;
 	startPhase();
+
+	radius = 30.0f;
 }
 
 void Boss::update(float delta)
@@ -36,15 +39,30 @@ void Boss::update(float delta)
 	if (timer <= 0.0f)
 		endPhase();
 
-	if (co_running)
+	if (!co.empty())
 	{
 		co_timer += delta;
 		while (co_timer > 0.0f)
 		{
-			setGlobal(co.state(), this, "self");
-			co_running = getGlobal(co.state(), "coroutine")["resume"](co);
+			//for (auto it = co.begin(); it != co.end(); )
+			//{
+			//	setGlobal(it->state(), this, "self");
+			//	if (getGlobal(it->state(), "coroutine")["resume"](*it).cast<bool>() == false)
+			//		it = co.erase(it);
+			//	else
+			//		++it;
+			//}
+
+			// stuff can be added to co inside coroutine.resume
+			for (size_t i = 0, n = co.size(); i < n; i++)
+			{
+				//Log(n);
+				setGlobal(co[i].state(), this, "self");
+				if (getGlobal(co[i].state(), "coroutine")["resume"](co[i]).cast<bool>() == false)
+					co.erase(std::next(co.begin(), i));
+			}
 			
-			if (!co_running)
+			if (co.empty())
 			{
 				co_timer = 0.0f;
 				break;
@@ -53,9 +71,6 @@ void Boss::update(float delta)
 			co_timer--;
 		}
 	}
-
-	speed += acc * delta;
-	speed = std::max(speed, speedMin);
 }
 
 void Boss::physicsUpdate(float delta)
@@ -64,11 +79,11 @@ void Boss::physicsUpdate(float delta)
 	y += speed * -math::dsin(direction) * delta;
 
 	auto& game = Game::getInstance();
-	for (auto pb = game.engine->playerBullets.begin(); pb != game.engine->playerBullets.end(); )
+	for (auto pb = game.stage->playerBullets.begin(); pb != game.stage->playerBullets.end(); )
 		if (col::circle_vs_circle(x, y, radius, pb->x, pb->y, pb->radius))
 		{
 			getDamage(10.0f);
-			pb = game.engine->playerBullets.erase(pb);
+			pb = game.stage->playerBullets.erase(pb);
 			// don't break, allow to get hit multiple times in 1 frame
 		}
 		else
@@ -91,6 +106,12 @@ void Boss::draw(sf::RenderTexture& target, float delta) const
 	target.draw(r);
 }
 
+void Boss::add_thread(luabridge::LuaRef f)
+{
+	// L doesn't work for some reason
+	co.emplace_back(getGlobal(f.state(), "coroutine")["create"](f));
+}
+
 void Boss::luaRegister(Namespace nameSpace)
 {
 	nameSpace
@@ -99,8 +120,15 @@ void Boss::luaRegister(Namespace nameSpace)
 		.addProperty("y", &Boss::y)
 		.addProperty("speed", &Boss::speed)
 		.addProperty("direction", &Boss::direction)
-		.addProperty("acc", &Boss::acc)
 		.addProperty("radius", &Boss::radius)
+		.addProperty("time_manipulator", &Boss::time_manipulator)
+		.addFunction("add_thread", &Boss::add_thread)
+
+		.addProperty("u", &Boss::u)
+		.addProperty("v", &Boss::v)
+		.addProperty("w", &Boss::w)
+		.addProperty("h", &Boss::h)
+
 		.endClass();
 }
 
@@ -123,13 +151,19 @@ void Boss::startPhase()
 	{
 		hp = phases[phaseInd].hp;
 		timer = phases[phaseInd].time;
-		co = getGlobal(co.state(), "coroutine")["create"](phases[phaseInd].script);
-		co_running = true;
+		//co = getGlobal(co.state(), "coroutine")["create"](phases[phaseInd].script);
+		//co_running = true;
+		co.emplace_back(getGlobal(L, "coroutine")["create"](phases[phaseInd].script));
 	}
 }
 
 void Boss::endPhase()
 {
+	auto& game = Game::getInstance();
+	co.clear();
+	game.stage->gameplayDelta = 1.0f;
+	game.stage->bullets.clear();
+
 	if (phaseInd + 1 < phases.size())
 	{
 		phaseInd++;

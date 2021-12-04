@@ -1,32 +1,15 @@
 #include "Bullet.h"
 
-#include "STGEngine.h"
+#include "Game.h"
 
 #include "mymath.h"
 #include "Log.h"
 
 using namespace luabridge;
 
-Bullet::Bullet(float x, float y, float speed, float direction, float radius, lua_State* L) :
-	x(x),
-	y(y),
-	speed(speed),
-	direction(direction),
-	radius(radius),
-	co(L)
+Bullet::Bullet() :
+	co(Game::getInstance().stage->script.L.get())
 {
-}
-
-Bullet::Bullet(float x, float y, float speed, float direction, float radius, luabridge::LuaRef script, lua_State* L) :
-	x(x),
-	y(y),
-	speed(speed),
-	direction(direction),
-	radius(radius),
-	co(L)
-{
-	co = getGlobal(L, "coroutine")["create"](script);
-	co_running = true;
 }
 
 void Bullet::update(float delta)
@@ -48,9 +31,6 @@ void Bullet::update(float delta)
 			co_timer--;
 		}
 	}
-
-	speed += acc * delta;
-	speed = std::max(speed, speedMin);
 }
 
 void Bullet::physicsUpdate(float delta)
@@ -61,10 +41,9 @@ void Bullet::physicsUpdate(float delta)
 
 void Bullet::endUpdate(float delta)
 {
-	if (x < 0.0f || y < 0.0f || x >= STGEngine::playAreaW || y >= STGEngine::playAreaH)
+	if (x < -100.0f || y < -100.0f || x >= Stage::playAreaW + 100.0f || y >= Stage::playAreaH + 100.0f)
 	{
 		dead = true;
-		//co = Nil();
 		return;
 	}
 }
@@ -78,5 +57,6 @@ void Bullet::luaRegister(Namespace nameSpace)
 		.addProperty("speed", &Bullet::speed)
 		.addProperty("direction", &Bullet::direction)
 		.addProperty("radius", &Bullet::radius)
+		.addProperty("rotate", &Bullet::rotate)
 		.endClass();
 }

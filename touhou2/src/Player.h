@@ -1,7 +1,7 @@
 #pragma once
-#include <SFML/Graphics.hpp>
 #include <lua.hpp>
 #include <LuaBridge/LuaBridge.h>
+#include <SFML/Graphics.hpp>
 
 // NOTE: switch to xspeed/yspeed or get rid of speed completely?
 struct Player
@@ -24,7 +24,7 @@ public:
 
 public:
 	// standard methods
-	Player(lua_State* L);
+	Player();
 
 	void update(float delta);
 	void physicsUpdate(float delta);
@@ -60,8 +60,6 @@ public:
 	float deathbombTimer = 0.0f;
 	float appearTimer = 0.0f;
 
-	lua_State* L = nullptr;
-
 public:
 	// states
 	using State = void(Player::*)(float);
@@ -79,4 +77,7 @@ public:
 public:
 	// other
 	static void luaRegister(luabridge::Namespace nameSpace);
+
+	float t = 0.0f;
+	float a = 0.0f;
 };

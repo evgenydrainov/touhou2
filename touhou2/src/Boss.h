@@ -20,7 +20,7 @@ public:
 
 public:
 	// standard methods
-	Boss(luabridge::LuaRef bossData, lua_State* L);
+	Boss(luabridge::LuaRef bossData);
 
 	void update(float delta);
 	void physicsUpdate(float delta);
@@ -34,9 +34,14 @@ public:
 	float y = 0.0f;
 	float speed = 0.0f;
 	float direction = 0.0f;
-	float acc = 0.0f;
-	float speedMin = 0.0f;
 	float radius = 0.0f;
+
+	bool time_manipulator = true;
+
+	int u = 0;
+	int v = 0;
+	int w = 0;
+	int h = 0;
 
 public:
 	// boss methods
@@ -55,10 +60,12 @@ public:
 	std::string name;
 	std::vector<Phase> phases;
 
-	luabridge::LuaRef co;
+	std::vector<luabridge::LuaRef> co;
 	float co_timer = 0.0f;
-	bool co_running = false;
+	lua_State* L = nullptr;
 
+	void add_thread(luabridge::LuaRef f);
+	
 public:
 	// other
 	static void luaRegister(luabridge::Namespace nameSpace);

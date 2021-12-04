@@ -40,13 +40,4 @@ namespace math
 
 	inline float point_direction(float x1, float y1, float x2, float y2) { return rad2deg(std::atan2(y1 - y2, x2 - x1)); }
 	inline float point_distance(float x1, float y1, float x2, float y2) { return std::sqrt(sqr(x2 - x1) + sqr(y2 - y1)); }
-
-	//inline float random(float a, float b)
-	//{
-	//	constexpr float max = std::mt19937::max();
-	//	static std::mt19937 engine{ std::random_device()() };
-	//	float r = (float)engine() / max;
-	//	float range = std::abs(a - b);
-	//	return std::min(a, b) + r * range;
-	//}
 }

@@ -1,10 +1,10 @@
 #pragma once
 #include "Singleton.h"
 
-#include "STGEngine.h"
+//#include "TitleScreen.h"
+#include "Stage.h"
 
 #include <SFML/Graphics.hpp>
-#include <memory>
 
 class Game : public Singleton<Game>
 {
@@ -12,14 +12,35 @@ public:
 	constexpr static int gameW = 640;
 	constexpr static int gameH = 480;
 
+	enum class Fullscreen
+	{
+		Disabled,
+		Enabled,
+		Borderless
+	};
+
 	void run();
 
-	std::unique_ptr<STGEngine> engine;
-	//std::unique_ptr<TitleScreen> title;
+	void goToTitleScren();
+	void startStage();
+	void restartStage();
+	void quitFromStage();
+
+	void loadOptions();
+	void saveOptions();
+
+	void setFullscreen(Fullscreen fullscreen);
+	inline Fullscreen getFullscreen() const { return m_fullscreen; }
+
+	void setVSync(bool enabled);
+	inline bool getVSync() const { return m_vSync; }
+
+	//TitleScreen* title = nullptr;
+	Stage* stage = nullptr;
 
 	sf::Font simsun;
 
-	unsigned long long frame = 0;
+	bool show_hitboxes = false;
 
 private:
 	enum class State
@@ -29,31 +50,18 @@ private:
 		Gameplay,
 	};
 
-	enum class Fullscreen
-	{
-		Disabled,
-		Enabled,
-		Borderless
-	};
-
-	void mHandleEvents();
 	void mTick(float delta);
 	void mRender() const;
 
-	void mUpdate(float delta);
-	void mDraw(sf::RenderTarget& target, float delta) const;
-
 	State m_state{};
-	
+
 	mutable sf::RenderWindow m_window;
 	mutable sf::RenderTexture m_gameSurf;
 
-	bool m_skipFrame = false;
-
 	float m_displayFps = 0.0f;
-	float m_displayFpsTimer = 0.0f;
 	float m_displayFpsCount = 0.0f;
 	float m_displayFpsCountN = 0.0f;
 
-	Fullscreen m_fullscreen = Fullscreen::Disabled;
+	Fullscreen m_fullscreen{};
+	bool m_vSync{};
 };

@@ -6,8 +6,7 @@
 struct Bullet
 {
 public:
-	Bullet(float x, float y, float speed, float direction, float radius, lua_State* L);
-	Bullet(float x, float y, float speed, float direction, float radius, luabridge::LuaRef script, lua_State* L);
+	Bullet();
 
 	// standard methods
 	void update(float delta);
@@ -21,8 +20,6 @@ public:
 	float y = 0.0f;
 	float speed = 0.0f;
 	float direction = 0.0f;
-	float acc = 0.0f;
-	float speedMin = 0.0f;
 	float radius = 0.0f;
 
 public:
@@ -34,6 +31,13 @@ public:
 	luabridge::LuaRef co;
 	float co_timer = 0.0f;
 	bool co_running = false;
+
+	int u = 0;
+	int v = 0;
+	int w = 0;
+	int h = 0;
+
+	bool rotate = false;
 
 public:
 	// other

@@ -1,7 +1,6 @@
 #pragma once
 
 #ifdef _DEBUG
-//#if 1
 
 #include <iostream>
 
@@ -28,11 +27,15 @@ inline void Log()
 	std::cout << std::endl;
 }
 
-#else
+#else // _DEBUG
 
 template <typename T, typename... TArgs>
 void Log(T head, TArgs... args)
 {
 }
 
-#endif
+inline void Log()
+{
+}
+
+#endif // _DEBUG

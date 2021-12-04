@@ -16,7 +16,7 @@ void GameOverMenu::update(float delta)
 		{
 		case 0:
 			// continue
-			game.engine->useContinue();
+			game.stage->useContinue();
 			return;
 
 		case 1:
@@ -41,14 +41,14 @@ void GameOverMenu::update(float delta)
 void GameOverMenu::draw(sf::RenderTarget& target, float delta) const
 {
 	sf::RectangleShape r;
-	r.setSize({ STGEngine::playAreaW, STGEngine::playAreaH });
+	r.setSize({ Stage::playAreaW, Stage::playAreaH });
 	r.setFillColor({ 0, 0, 0, 128 });
 	target.draw(r);
 
 	for (size_t i = 0; i < m_menu.size(); i++)
 	{
 		Text t;
-		t.setPosition(STGEngine::playAreaW / 2, STGEngine::playAreaH / 3 + 16 * i);
+		t.setPosition(Stage::playAreaW / 2, Stage::playAreaH / 3 + 16 * i);
 		if (i == m_cursor)
 			t.setFillColor(sf::Color::Yellow);
 
